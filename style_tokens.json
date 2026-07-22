@@ -1,0 +1,119 @@
+{
+  "meta": {
+    "name": "接續 UI Design Tokens",
+    "version": "1.0.0",
+    "updated": "2026-07-22"
+  },
+  "color": {
+    "text": {
+      "primary": "#24332D",
+      "secondary": "#6D7B74"
+    },
+    "brand": {
+      "primary": "#567766",
+      "hover": "#3F5F50",
+      "soft": "#E7EEE8"
+    },
+    "background": {
+      "canvas": "#F3F5F1",
+      "surface": "#FFFEFB",
+      "sidebar": "#F9FAF7",
+      "agent": "#FBFCF9",
+      "subtle": "#F7F8F5"
+    },
+    "border": {
+      "default": "#DFE5E0",
+      "control": "#CFD9D1",
+      "focus": "#8FA697"
+    },
+    "accent": {
+      "sand": "#F1E7D4",
+      "blueSoft": "#E4EDF0"
+    },
+    "status": {
+      "success": "#567766",
+      "successSoft": "#E7EEE8",
+      "warning": "#AF7C39",
+      "warningSoft": "#F5EAD8",
+      "danger": "#A85E55",
+      "dangerSoft": "#F3E3E0"
+    }
+  },
+  "font": {
+    "family": {
+      "sans": "Noto Sans TC, PingFang TC, Microsoft JhengHei, system-ui, sans-serif",
+      "serif": "Georgia, Noto Serif TC, serif"
+    },
+    "weight": {
+      "regular": 400,
+      "medium": 500,
+      "bold": 700,
+      "extraBold": 800
+    },
+    "size": {
+      "caption": "10px",
+      "label": "11px",
+      "bodyCompact": "12px",
+      "body": "14px",
+      "cardTitle": "14px",
+      "sectionTitle": "20px",
+      "pageTitleMin": "26px",
+      "pageTitleMax": "39px",
+      "displayMin": "28px",
+      "displayMax": "43px"
+    },
+    "lineHeight": {
+      "tight": 1.28,
+      "heading": 1.35,
+      "body": 1.65,
+      "relaxed": 1.75
+    }
+  },
+  "space": {
+    "1": "4px",
+    "2": "8px",
+    "3": "12px",
+    "4": "16px",
+    "5": "20px",
+    "6": "24px",
+    "7": "28px",
+    "8": "32px",
+    "10": "40px",
+    "12": "48px"
+  },
+  "radius": {
+    "small": "8px",
+    "control": "10px",
+    "card": "14px",
+    "panel": "17px",
+    "hero": "22px",
+    "pill": "999px"
+  },
+  "shadow": {
+    "base": "0 9px 28px rgba(48, 65, 56, 0.045)",
+    "raised": "0 16px 45px rgba(42, 60, 51, 0.08)",
+    "control": "0 8px 20px rgba(63, 95, 80, 0.16)",
+    "overlay": "0 25px 80px rgba(31, 47, 38, 0.22)"
+  },
+  "motion": {
+    "durationFast": "180ms",
+    "durationDefault": "200ms",
+    "durationOverlay": "220ms",
+    "easing": "ease",
+    "hoverLift": "-2px"
+  },
+  "layout": {
+    "topbarHeight": "68px",
+    "desktop": {
+      "sidebarWidth": "218px",
+      "agentWidth": "330px",
+      "workspacePadding": "28px"
+    },
+    "breakpoint": {
+      "wide": "1180px",
+      "compact": "980px",
+      "mobile": "760px"
+    },
+    "touchTargetMin": "44px"
+  }
+}
