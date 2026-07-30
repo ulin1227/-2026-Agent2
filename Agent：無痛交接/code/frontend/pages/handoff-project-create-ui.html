@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>接續 - 建立交接專案</title>
+  <link rel="stylesheet" href="./globals.css">
+  <style>
+    .project-create-shell {
+      min-height: 100vh;
+      background: var(--canvas);
+    }
+
+    .project-create-shell .workspace {
+      min-width: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .project-create-shell .content-scroll {
+      overflow: auto;
+      padding: 25px 27px 38px;
+    }
+
+    .project-create-shell .topbar h1 {
+      font-size: 24px;
+    }
+
+    .topbar-note {
+      max-width: 390px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: right;
+    }
+
+    .setup-grid,
+    .summary-grid {
+      width: 100%;
+      max-width: 1120px;
+      margin-inline: auto;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 17px;
+    }
+
+    .summary-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      box-shadow: 0 9px 28px rgba(48, 65, 56, 0.045);
+    }
+
+    .summary-card span,
+    .summary-card strong {
+      display: block;
+    }
+
+    .summary-card span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .summary-card strong {
+      margin-top: 4px;
+      font: 500 26px/1.2 Georgia, "Noto Serif TC", serif;
+    }
+
+    .setup-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 460px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .setup-panel {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .setup-grid > .setup-panel:last-child {
+      width: 460px;
+      max-width: 460px;
+      min-width: 0;
+      justify-self: stretch;
+    }
+
+    .setup-panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .setup-panel-header > div {
+      min-width: 0;
+    }
+
+    .setup-panel-header h2 {
+      margin: 5px 0 0;
+      font: 500 19px/1.4 Georgia, "Noto Serif TC", serif;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .setup-panel-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .form-body {
+      display: grid;
+      gap: 14px;
+      padding: 24px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .form-field label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .form-field input,
+    .form-field textarea,
+    .form-field select {
+      width: 100%;
+      border: 1px solid #cfd9d1;
+      border-radius: 11px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .form-field input,
+    .form-field select {
+      min-height: 42px;
+      padding: 0 11px;
+    }
+
+    .form-field textarea {
+      min-height: 96px;
+      padding: 11px 12px;
+      resize: vertical;
+      line-height: 1.7;
+    }
+
+    .form-field input:focus,
+    .form-field textarea:focus,
+    .form-field select:focus {
+      outline: 0;
+      border-color: #8fa697;
+      box-shadow: 0 0 0 3px rgba(86, 119, 102, 0.08);
+    }
+
+    .wide-field {
+      grid-column: 1 / -1;
+    }
+
+    .mode-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .mode-card {
+      min-height: 92px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .mode-card:hover,
+    .mode-card.is-active {
+      border-color: var(--sage);
+      background: var(--sage-soft);
+      transform: translateY(-1px);
+    }
+
+    .mode-card b,
+    .mode-card span {
+      display: block;
+    }
+
+    .mode-card b {
+      font-size: 12px;
+    }
+
+    .mode-card span {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.55;
+    }
+
+    .role-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 24px 0;
+    }
+
+    .role-toolbar p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .role-toolbar .ghost-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .role-list {
+      display: grid;
+      gap: 14px;
+      padding: 18px 24px 24px;
+    }
+
+    .role-card {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .role-card-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcf9;
+    }
+
+    .role-name-input {
+      min-width: 0;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--ink);
+      font: 700 13px/1.4 "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
+      padding: 7px 8px;
+    }
+
+    .role-name-input:focus {
+      outline: 0;
+      border-color: #cfd9d1;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(86, 119, 102, 0.08);
+    }
+
+    .role-actions {
+      display: flex;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .role-actions button,
+    .member-remove {
+      min-height: 34px;
+      border: 1px solid #ccd7cf;
+      border-radius: 9px;
+      background: #fff;
+      color: var(--sage-dark);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .role-actions button {
+      padding: 0 10px;
+    }
+
+    .role-actions .set-myself {
+      background: var(--sage-soft);
+      border-color: #b8cbbd;
+    }
+
+    .role-actions .set-myself:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #f4f6f5;
+      border-color: #cfd9d1;
+      color: #8fa697;
+    }
+
+    .role-actions button:hover,
+    .member-remove:hover {
+      background: var(--sage-soft);
+      border-color: #b8cbbd;
+    }
+
+    .role-actions .danger-action,
+    .member-remove {
+      border-color: #e1c3be;
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .member-list {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      min-width: 0;
+    }
+
+    .member-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .member-row input {
+      min-width: 0;
+      max-width: 100%;
+      min-height: 40px;
+      border: 1px solid #cfd9d1;
+      border-radius: 10px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+      padding: 0 11px;
+    }
+
+    .member-row input:focus {
+      outline: 0;
+      border-color: #8fa697;
+      box-shadow: 0 0 0 3px rgba(86, 119, 102, 0.08);
+    }
+
+    .member-remove {
+      padding: 0 10px;
+    }
+
+    .empty-members {
+      padding: 12px;
+      border: 1px dashed #c9d5cc;
+      border-radius: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-done {
+      background: var(--sage-soft);
+      color: var(--sage-dark);
+    }
+
+    .status-warning {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .bottom-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      max-width: 1120px;
+      margin: 18px auto 0;
+    }
+
+    .bottom-actions .primary-button,
+    .bottom-actions .ghost-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      line-height: 1;
+    }
+
+    .bottom-actions .primary-button:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .hint-box {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcf9;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 980px) {
+      .project-create-shell .workspace {
+        height: auto;
+        overflow: visible;
+      }
+
+      .project-create-shell .content-scroll {
+        overflow: visible;
+        padding: 18px;
+      }
+
+      .setup-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .setup-grid > .setup-panel:last-child {
+        width: 100%;
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .project-create-shell .topbar {
+        position: sticky;
+        top: 0;
+      }
+
+      .topbar-note {
+        display: none;
+      }
+
+      .summary-grid,
+      .field-grid,
+      .mode-options,
+      .member-row {
+        grid-template-columns: 1fr;
+      }
+
+      .role-toolbar,
+      .role-card-header,
+      .bottom-actions {
+        display: grid;
+      }
+
+      .bottom-actions .primary-button,
+      .bottom-actions .ghost-button,
+      .role-toolbar .ghost-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="project-create-shell">
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="score-pill score-warn">建立交接專案</div>
+          <h1>建立交接專案並指派成員</h1>
+        </div>
+      </header>
+
+      <div class="content-scroll">
+        <section class="summary-grid" aria-label="建立狀態摘要">
+          <div class="summary-card">
+            <span>身分組</span>
+            <strong id="roleGroupCount">3</strong>
+          </div>
+          <div class="summary-card">
+            <span>已指派成員</span>
+            <strong id="memberCount">0</strong>
+          </div>
+          <div class="summary-card">
+            <span>建立狀態</span>
+            <strong id="setupStatus">0%</strong>
+          </div>
+        </section>
+
+        <section class="setup-grid">
+          <article class="map-panel setup-panel">
+            <div class="setup-panel-header">
+              <div>
+                <div class="eyebrow">PROJECT SETUP</div>
+                <h2>交接專案資訊</h2>
+              </div>
+              <span class="status-pill status-warning" id="projectStatus">尚未完成</span>
+            </div>
+
+            <div class="form-body">
+              <div class="field-grid">
+                <div class="form-field wide-field">
+                  <label for="projectName">交接專案名稱</label>
+                  <input id="projectName" type="text" placeholder="輸入交接專案名稱">
+                </div>
+
+                <div class="form-field">
+                  <label for="departmentName">部門或團隊</label>
+                  <input id="departmentName" type="text" placeholder="輸入部門或團隊名稱">
+                </div>
+
+                <div class="form-field">
+                  <label for="handoffDeadline">預計交接完成日</label>
+                  <input id="handoffDeadline" type="date">
+                </div>
+              </div>
+
+              <div class="hint-box">
+                至少指定 1 位主管與 1 位離職同事。</br>協作同事可視情況加入，用來補充文件或共同確認交接內容。
+              </div>
+            </div>
+          </article>
+
+          <article class="map-panel setup-panel">
+            <div class="setup-panel-header">
+              <div>
+                <div class="eyebrow">ROLE GROUPS</div>
+                <h2>成員指派</h2>
+              </div>
+              <span class="status-pill status-warning" id="memberStatus">尚未指派</span>
+            </div>
+
+            <div class="role-list" id="roleList"></div>
+          </article>
+        </section>
+
+        <div class="bottom-actions">
+          <button class="ghost-button" type="button" id="resetBtn">清空重填</button>
+          <button class="primary-button" type="button" id="createProjectBtn" disabled>建立交接專案</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const projectName = document.querySelector("#projectName");
+    const departmentName = document.querySelector("#departmentName");
+    const handoffDeadline = document.querySelector("#handoffDeadline");
+    const modeButtons = document.querySelectorAll(".mode-card");
+    const roleList = document.querySelector("#roleList");
+    const roleGroupCount = document.querySelector("#roleGroupCount");
+    const memberCount = document.querySelector("#memberCount");
+    const setupStatus = document.querySelector("#setupStatus");
+    const projectStatus = document.querySelector("#projectStatus");
+    const memberStatus = document.querySelector("#memberStatus");
+    const createProjectBtn = document.querySelector("#createProjectBtn");
+    const resetBtn = document.querySelector("#resetBtn");
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const minDateString = `${year}-${month}-${day}`;
+    
+    if (handoffDeadline) {
+      handoffDeadline.min = minDateString;
+    }
+
+    let currentMode = "fast";
+    let roleGroups = [
+      { id: crypto.randomUUID(), name: "主管", members: [] },
+      { id: crypto.randomUUID(), name: "離職同事", members: [] },
+      { id: crypto.randomUUID(), name: "協作同事", members: [] }
+    ];
+
+    // 模擬當前操作者的資料 (實務上可從登入狀態獲取)
+    const currentUser = {
+      name: "陳大明",
+      email: "ming.cheng@example.com"
+    };
+
+    function createMember() {
+      return {
+        id: crypto.randomUUID(),
+        name: "",
+        email: ""
+      };
+    }
+
+    function getCompletedProjectFields() {
+      return [projectName, departmentName, handoffDeadline]
+        .filter((field) => field.value.trim()).length;
+    }
+
+    function getMembers() {
+      return roleGroups.flatMap((group) => group.members);
+    }
+
+    function getValidMembers() {
+      return getMembers().filter((member) => member.name.trim() && member.email.trim());
+    }
+
+    function hasRequiredRoles() {
+      const supervisor = roleGroups.find((group) => group.name.trim() === "主管");
+      const departing = roleGroups.find((group) => group.name.trim() === "離職同事");
+      const supervisorOk = supervisor && supervisor.members.some((member) => member.name.trim() && member.email.trim());
+      const departingOk = departing && departing.members.some((member) => member.name.trim() && member.email.trim());
+      return Boolean(supervisorOk && departingOk);
+    }
+
+    function updateSummary() {
+      const completedFields = getCompletedProjectFields();
+      const validMembers = getValidMembers().length;
+      const projectDone = completedFields === 3;
+      const membersDone = hasRequiredRoles();
+      const rate = Math.round(((completedFields / 3) * 0.55 + (membersDone ? 0.45 : validMembers > 0 ? 0.18 : 0)) * 100);
+
+      if (roleGroupCount) roleGroupCount.textContent = String(roleGroups.length);
+      if (memberCount) memberCount.textContent = String(validMembers);
+      if (setupStatus) setupStatus.textContent = `${rate}%`;
+
+      if (projectStatus) {
+        projectStatus.textContent = projectDone ? "已填寫" : "尚未完成";
+        projectStatus.className = `status-pill ${projectDone ? "status-done" : "status-warning"}`;
+      }
+
+      if (memberStatus) {
+        memberStatus.textContent = membersDone ? "必要成員已齊" : validMembers > 0 ? "尚缺必要成員" : "尚未指派";
+        memberStatus.className = `status-pill ${membersDone ? "status-done" : "status-warning"}`;
+      }
+
+      if (createProjectBtn) {
+        createProjectBtn.disabled = !(projectDone && membersDone);
+      }
+    }
+
+    function renderRoles() {
+      roleList.innerHTML = "";
+
+      const isCurrentUserAssigned = roleGroups.some(group => 
+        group.members.some(member => member.email === currentUser.email)
+      );
+
+      roleGroups.forEach((group) => {
+        const roleCard = document.createElement("section");
+        roleCard.className = "role-card";
+        roleCard.dataset.groupId = group.id;
+
+        const memberRows = group.members.length
+          ? group.members.map((member) => `
+            <div class="member-row" data-member-id="${member.id}">
+              <input class="member-name" type="text" placeholder="成員姓名" value="${member.name}">
+              <input class="member-email" type="email" placeholder="成員信箱" value="${member.email}">
+              <button class="member-remove" type="button">移除</button>
+            </div>
+          `).join("")
+          : `<div class="empty-members">目前尚未加入成員。</div>`;
+
+        let setMyselfBtnHTML = "";
+        if (group.name === "主管" || group.name === "離職同事") {
+          const disabledAttr = isCurrentUserAssigned ? "disabled" : "";
+          setMyselfBtnHTML = `<button class="set-myself" type="button" ${disabledAttr}>設為本人</button>`;
+        }
+
+        roleCard.innerHTML = `
+          <div class="role-card-header">
+            <input class="role-name-input" type="text" value="${group.name}" aria-label="身分組名稱">
+            <div class="role-actions">
+              ${setMyselfBtnHTML}
+              <button class="add-member" type="button">加入成員</button>
+            </div>
+          </div>
+          <div class="member-list">
+            ${memberRows}
+          </div>
+        `;
+
+        roleList.append(roleCard);
+      });
+
+      updateSummary();
+    }
+
+    function findGroup(groupId) {
+      return roleGroups.find((group) => group.id === groupId);
+    }
+
+    modeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        currentMode = button.dataset.mode;
+        modeButtons.forEach((item) => item.classList.toggle("is-active", item === button));
+      });
+    });
+
+    [projectName, departmentName, handoffDeadline].forEach((field) => {
+      if (field) field.addEventListener("input", updateSummary);
+    });
+
+    roleList.addEventListener("click", (event) => {
+      const roleCard = event.target.closest(".role-card");
+      if (!roleCard) return;
+
+      const group = findGroup(roleCard.dataset.groupId);
+      if (!group) return;
+
+      if (event.target.classList.contains("add-member")) {
+        group.members.push(createMember());
+        renderRoles();
+      }
+
+      if (event.target.classList.contains("set-myself")) {
+        const alreadyExists = group.members.some(m => m.email === currentUser.email);
+        
+        if (!alreadyExists) {
+           group.members.push({
+            id: crypto.randomUUID(),
+            name: currentUser.name,
+            email: currentUser.email
+          });
+          renderRoles();
+        }
+      }
+
+      if (event.target.classList.contains("member-remove")) {
+        const memberRow = event.target.closest(".member-row");
+        group.members = group.members.filter((member) => member.id !== memberRow.dataset.memberId);
+        renderRoles();
+      }
+    });
+
+    roleList.addEventListener("input", (event) => {
+      const roleCard = event.target.closest(".role-card");
+      if (!roleCard) return;
+
+      const group = findGroup(roleCard.dataset.groupId);
+      if (!group) return;
+
+      if (event.target.classList.contains("role-name-input")) {
+        group.name = event.target.value;
+      }
+
+      const memberRow = event.target.closest(".member-row");
+      if (memberRow) {
+        const member = group.members.find((item) => item.id === memberRow.dataset.memberId);
+        if (member && event.target.classList.contains("member-name")) {
+          member.name = event.target.value;
+        }
+        if (member && event.target.classList.contains("member-email")) {
+          member.email = event.target.value;
+        }
+      }
+
+      updateSummary();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      projectName.value = "";
+      departmentName.value = "";
+      handoffDeadline.value = "";
+      currentMode = "fast";
+      modeButtons.forEach((item) => item.classList.toggle("is-active", item.dataset.mode === "fast"));
+      roleGroups = [
+        { id: crypto.randomUUID(), name: "主管", members: [] },
+        { id: crypto.randomUUID(), name: "離職同事", members: [] },
+        { id: crypto.randomUUID(), name: "協作同事", members: [] }
+      ];
+      renderRoles();
+    });
+
+    createProjectBtn.addEventListener("click", () => {
+      alert("交接專案已建立。此為前端原型，後續可接 API 儲存案件與成員。");
+    });
+
+    renderRoles();
+  </script>
+</body>
+</html>

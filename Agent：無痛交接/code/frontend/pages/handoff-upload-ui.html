@@ -1,0 +1,1747 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>接續 - 資料上傳</title>
+  <link rel="stylesheet" href="./globals.css">
+  <style>
+    .handoff-upload-shell {
+      min-height: 100vh;
+      background: var(--canvas);
+    }
+
+    .handoff-upload-shell .workspace {
+      min-width: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .handoff-upload-shell .content-scroll {
+      overflow: auto;
+      padding: 25px 27px 38px;
+    }
+
+    .handoff-upload-shell .topbar h1 {
+      font-size: 24px;
+    }
+
+    .topbar-note {
+      max-width: 380px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: right;
+    }
+
+    .summary-grid,
+    .mode-panel,
+    .upload-layout {
+      max-width: 1180px;
+      margin-inline: auto;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 17px;
+    }
+
+    .summary-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      box-shadow: 0 9px 28px rgba(48, 65, 56, 0.045);
+    }
+
+    .summary-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .summary-card strong {
+      display: block;
+      margin-top: 4px;
+      font: 500 26px/1.2 Georgia, "Noto Serif TC", serif;
+    }
+
+    .mode-panel {
+      margin-bottom: 17px;
+      padding: 22px;
+    }
+
+    .mode-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+
+    .mode-heading h2 {
+      margin: 5px 0 0;
+      font: 500 19px/1.4 Georgia, "Noto Serif TC", serif;
+    }
+
+    .mode-heading p {
+      max-width: 420px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      text-align: right;
+    }
+
+    .mode-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .mode-card {
+      min-height: 116px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .mode-card:hover,
+    .mode-card.is-active {
+      border-color: var(--sage);
+      background: var(--sage-soft);
+      transform: translateY(-1px);
+    }
+
+    .mode-card b,
+    .mode-card span,
+    .mode-card small {
+      display: block;
+    }
+
+    .mode-card b {
+      font-size: 13px;
+    }
+
+    .mode-card span {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .mode-card small {
+      margin-top: 10px;
+      color: var(--sage-dark);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .upload-layout {
+      display: grid;
+      grid-template-columns: 1.03fr 0.97fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .upload-panel {
+      overflow: hidden;
+    }
+
+    .upload-panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .upload-panel-header h2 {
+      margin: 5px 0 0;
+      font: 500 19px/1.4 Georgia, "Noto Serif TC", serif;
+    }
+
+    .upload-panel-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .upload-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      margin: 0;
+    }
+
+    .upload-actions .primary-button,
+    .upload-actions .ghost-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .upload-actions .primary-button {
+      cursor: pointer;
+    }
+
+    .file-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
+
+    .upload-zone {
+      margin: 24px;
+      padding: 22px;
+      border: 1px dashed #b7c7bc;
+      border-radius: 14px;
+      background:
+        linear-gradient(135deg, rgba(231, 238, 232, 0.72), rgba(255, 254, 251, 0.82)),
+        var(--paper);
+    }
+
+    .upload-zone.is-dragover {
+      border-color: var(--sage);
+      background: var(--sage-soft);
+    }
+
+    .upload-zone strong,
+    .upload-zone p {
+      display: block;
+      margin: 0;
+    }
+
+    .upload-zone strong {
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .upload-zone p {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .upload-file-list {
+      display: grid;
+      gap: 0;
+      margin: 0 24px 24px;
+      padding: 0;
+      list-style: none;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .empty-file-state {
+      padding: 22px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      background: var(--paper);
+      text-align: center;
+    }
+
+    .file-row {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 74px;
+      padding: 13px 14px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .file-row:last-child {
+      border-bottom: 0;
+    }
+
+    .file-type {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--blue-soft);
+      color: var(--sage-dark);
+      font: 700 12px/1 Georgia, "Noto Serif TC", serif;
+    }
+
+    .file-main {
+      min-width: 0;
+    }
+
+    .file-name {
+      overflow: hidden;
+      margin: 0;
+      font-weight: 700;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-meta {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-done {
+      background: var(--sage-soft);
+      color: var(--sage-dark);
+    }
+
+    .status-warning {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .status-danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .check-panel {
+      padding: 24px;
+    }
+
+    .check-note {
+      margin: 0 0 14px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .check-note p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .source-line {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .handoff-list {
+      display: grid;
+      gap: 12px;
+      margin: 18px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .handoff-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcf9;
+    }
+
+    .handoff-item.is-missing {
+      border-color: rgba(168, 94, 85, 0.35);
+      background: #f9efed;
+    }
+
+    .handoff-item.is-pending {
+      background: #fbfcf9;
+    }
+
+    .handoff-item.is-warning {
+      border-color: rgba(220, 165, 80, 0.4);
+      background: #fffbf2;
+      cursor: pointer;
+    }
+
+    .handoff-item.is-warning .item-dot {
+      background: #e6a23c;
+    }
+
+    .handoff-item.is-warning:hover {
+      background: #fdf5e6;
+    }
+
+    .handoff-item.is-done {
+      border-color: rgba(86, 119, 102, 0.26);
+      background: #f7faf7;
+    }
+
+    .handoff-item.is-done .item-dot {
+      background: var(--sage);
+    }
+
+    .handoff-item.is-missing .item-dot {
+      background: var(--danger);
+    }
+
+    .agent-feedback {
+      display: none; /* 預設隱藏 */
+      grid-column: 1 / -1; /* 跨越整欄 */
+      margin-top: 4px;
+      padding: 14px;
+      border-radius: 8px;
+      background: #fdf6ec;
+      border: 1px dashed #f3d19e;
+      color: #8c6e3c;
+      font-size: 12px;
+      line-height: 1.6;
+      cursor: default;
+    }
+
+    .agent-feedback.is-visible {
+      display: block;
+    }
+
+    .resolve-btn {
+      margin-top: 12px;
+      padding: 7px 14px;
+      border: 1px solid #e6a23c;
+      border-radius: 6px;
+      background: #fff;
+      color: #e6a23c;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .resolve-btn:hover {
+      background: #e6a23c;
+      color: #fff;
+    }
+
+    .item-dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 8px;
+      border-radius: 999px;
+      background: var(--warning);
+    }
+
+    .item-main {
+      min-width: 0;
+    }
+
+    .item-title {
+      margin: 0;
+      font-weight: 700;
+    }
+
+    .item-text {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .item-keywords {
+      margin-top: 8px;
+      color: var(--sage-dark);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    .file-input:focus-visible + label,
+    .mode-card:focus-visible {
+      outline: 0;
+      box-shadow: 0 0 0 3px rgba(86, 119, 102, 0.18);
+    }
+
+    /* 下拉選單樣式 */
+    .item-selector {
+      margin-top: 6px;
+      padding: 4px 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      font-size: 12px;
+      color: var(--sage-dark);
+      width: 100%;
+      max-width: 220px;
+      cursor: pointer;
+    }
+
+    .item-selector:focus {
+      outline: 0;
+      border-color: var(--sage);
+      box-shadow: 0 0 0 2px rgba(86, 119, 102, 0.18);
+    }
+
+    .interview-widget {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 40;
+      display: grid;
+      justify-items: end;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .interview-fab,
+    .interview-panel {
+      pointer-events: auto;
+    }
+
+    .interview-fab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 18px;
+      border: 1px solid #b8cbbd;
+      border-radius: 999px;
+      background: var(--sage);
+      color: #fff;
+      box-shadow: 0 14px 34px rgba(48, 65, 56, 0.22);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .interview-fab:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 38px rgba(48, 65, 56, 0.25);
+    }
+
+    .interview-fab span {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      font: 700 14px/1 Georgia, "Noto Serif TC", serif;
+    }
+
+    .interview-panel {
+      display: none;
+      width: min(392px, calc(100vw - 32px));
+      max-height: min(650px, calc(100vh - 104px));
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fbfcf9;
+      box-shadow: 0 20px 54px rgba(48, 65, 56, 0.2);
+    }
+
+    .interview-panel.is-open {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .interview-head {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: start;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .interview-head h2 {
+      margin: 4px 0 3px;
+      font: 500 18px/1.35 Georgia, "Noto Serif TC", serif;
+    }
+
+    .interview-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .interview-close {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--sage-dark);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .interview-body {
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .interview-lock {
+      display: none;
+      margin-bottom: 12px;
+      padding: 12px;
+      border: 1px solid #e1c3be;
+      border-radius: 12px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .interview-panel.is-locked .interview-lock {
+      display: block;
+    }
+
+    .interview-intro {
+      margin: 0 0 12px;
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .interview-prompts {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .interview-prompt-group {
+      display: grid;
+      gap: 8px;
+    }
+
+    .interview-prompt {
+      display: grid;
+      gap: 5px;
+      width: 100%;
+      min-height: 40px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      color: var(--sage-dark);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .interview-prompt.is-active {
+      border-color: var(--sage);
+      background: var(--sage-soft);
+      box-shadow: 0 0 0 3px rgba(86, 119, 102, 0.08);
+    }
+
+    .interview-prompt small {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .interview-prompt:hover {
+      border-color: #b8cbbd;
+      background: var(--sage-soft);
+    }
+
+    .interview-answer-card {
+      width: calc(100% - 34px);
+      margin-left: 34px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--sage-soft);
+      box-sizing: border-box;
+    }
+
+    .interview-answer-card p {
+      display: block;
+      margin: 0;
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .interview-composer {
+      display: grid;
+      gap: 9px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .interview-composer textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      border: 1px solid #cfd9d1;
+      border-radius: 12px;
+      padding: 11px 12px;
+      color: var(--ink);
+      background: #fff;
+      font-size: 12px;
+      line-height: 1.65;
+      box-sizing: border-box;
+    }
+
+    .interview-composer textarea::placeholder {
+      color: #8fa697;
+      opacity: 0.72;
+    }
+
+    .interview-composer textarea:focus {
+      outline: 0;
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(86, 119, 102, 0.1);
+    }
+
+    .interview-actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .interview-save-state {
+      margin: 0;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.5;
+    }
+
+    .interview-send {
+      min-height: 38px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--sage);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .interview-panel.is-locked .interview-prompt,
+    .interview-panel.is-locked textarea,
+    .interview-panel.is-locked .interview-send {
+      opacity: 0.55;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    @media (max-width: 980px) {
+      .handoff-upload-shell .workspace {
+        height: auto;
+        overflow: visible;
+      }
+
+      .handoff-upload-shell .content-scroll {
+        overflow: visible;
+        padding: 18px;
+      }
+
+      .upload-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .handoff-upload-shell .topbar {
+        position: sticky;
+        top: 0;
+      }
+
+      .topbar-note {
+        display: none;
+      }
+
+      .summary-grid,
+      .mode-options {
+        grid-template-columns: 1fr;
+      }
+
+      .project-info-card {
+        max-width: 1180px;
+        margin-inline: auto;
+        margin-bottom: 32px;
+        padding: 18px 24px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .project-info-card h2 {
+        margin: 4px 0 0 0; 
+        font: 500 19px/1.4 Georgia, "Noto Serif TC", serif;
+        color: var(--ink);
+      }
+
+      .mode-heading,
+      .upload-panel-header,
+      .upload-actions {
+        display: grid;
+      }
+
+      .mode-heading p {
+        text-align: left;
+      }
+
+      .upload-actions,
+      .primary-button,
+      .ghost-button {
+        width: 100%;
+      }
+
+      .file-row,
+      .handoff-item {
+        grid-template-columns: 38px 1fr;
+      }
+
+      .file-row .status-pill,
+      .handoff-item .status-pill {
+        grid-column: 2;
+        justify-self: start;
+      }
+
+      .interview-widget {
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .interview-fab {
+        min-height: 44px;
+        padding-inline: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="handoff-upload-shell">
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="score-pill score-warn">離職交接進度：1/3</div>
+          <h1>先把交接資料放進來！</h1>
+        </div>
+      </header>
+
+      <div class="content-scroll">
+        <section class="summary-grid" aria-label="資料狀態摘要">
+          <div class="summary-card">
+            <span>目前資料</span>
+            <strong id="fileCount">0</strong>
+          </div>
+          <div class="summary-card">
+            <span>缺少資料</span>
+            <strong id="gapCount">0</strong>
+          </div>
+          <div class="summary-card">
+            <span>清單完成度</span>
+            <strong id="completionRate">0%</strong>
+          </div>
+        </section>
+
+        <section style="max-width: 1180px; margin: 0 auto 10px; padding: 18px 22px; border: 1px solid var(--line); border-radius: 14px; background: #fff;" aria-label="交接案件資訊">
+          <div class="eyebrow">PROJECT</div>
+          <h2 id="caseNameDisplay" style="margin: 4px 0 0 0; font: 500 19px/1.4 Georgia, 'Noto Serif TC', serif;">載入中...</h2>
+        </section>
+
+        <section class="map-panel mode-panel" aria-label="選擇交接模式">
+          <div class="mode-heading">
+            <div>
+              <div class="eyebrow">HANDOFF MODE</div>
+              <h2>選擇交接模式</h2>
+            </div>
+          </div>
+          <div class="mode-options">
+            <button class="mode-card is-active" type="button" data-mode="fast">
+              <b>最低可接手模式</b>
+              <span>適合：臨時離職、交接時間很短、只求新人不斷線。</span>
+              <small>必要項目 · 6 項</small>
+            </button>
+            <button class="mode-card" type="button" data-mode="full">
+              <b>標準職務交接模式</b>
+              <span>適合：一般職務交接。</span>
+              <small>必要項目 · 9 項</small>
+            </button>
+          </div>
+        </section>
+
+        <section class="upload-layout">
+          <article class="map-panel upload-panel">
+            <div class="upload-panel-header">
+              <div>
+                <div class="eyebrow">DATA UPLOAD</div>
+                <h2>交接文件檔案收集</h2>
+              </div>
+              <div class="upload-actions">
+                <input class="file-input" id="fileInput" type="file" multiple>
+                <label class="primary-button" for="fileInput">加入檔案</label>
+              </div>
+            </div>
+
+            <div class="upload-zone" id="uploadZone">
+              <strong>拖曳檔案到這裡，或使用右上方加入檔案。</strong>
+              <p>支援.pdf、.docx、.txt、.md、.csv、.json 等檔案類型。</p>
+            </div>
+
+            <ul class="upload-file-list" id="fileList" aria-label="目前已上傳資料"></ul>
+          </article>
+
+          <article class="map-panel upload-panel">
+            <div class="upload-panel-header">
+              <div>
+                <div class="eyebrow">HANDOFF CHECKLIST</div>
+                <h2 id="checklistTitle">交接期清單</h2>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="./[2026_0725 ulin] 交接文件完備性檢查規範.pdf" target="_blank" class="ghost-button" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font-size: 11px; height: 26px; min-height: 26px; padding: 0 10px; margin: 0; box-sizing: border-box;">
+                  預覽規範
+                </a>
+                <span class="status-pill status-warning" id="reviewStatus">尚未上傳</span>
+              </div>
+            </div>
+
+            <div class="check-panel">
+              <div class="check-note">
+                <p id="reviewSummary">目前尚未上傳資料。請先加入檔案，再比對交接清單。</p>
+              </div>
+
+              <ul class="handoff-list" id="handoffList"></ul>
+
+              <div style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button id="agentCheckBtn" class="ghost-button" disabled style="min-height: 44px; font-size: 13px; cursor: not-allowed; border-color: #8fa697; color: #567766;">
+                  Agent 快速欄位檢查
+                </button>
+                <button id="submitReviewBtn" class="primary-button" disabled style="min-height: 44px; font-size: 13px; cursor: not-allowed;">
+                  交給主管審核
+                </button>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    <div class="interview-widget" aria-label="經驗訪談">
+      <section class="interview-panel" id="experiencePanel" aria-live="polite">
+        <div class="interview-head">
+          <div>
+            <div class="eyebrow">EXPERIENCE INTERVIEW</div>
+            <h2>經驗訪談</h2>
+            <p>你可以把正式文件不會寫、</br>但新人接手很需要知道的小細節補在這裡。</p>
+          </div>
+          <button class="interview-close" id="experienceCloseBtn" type="button" aria-label="關閉經驗訪談">×</button>
+        </div>
+        <div class="interview-body">
+          <div class="interview-lock" id="experienceLock">
+            這個功能只開放離職同事使用，用來補充文件中不容易寫清楚的默契、偏好與人情世故。
+          </div>
+          <div class="interview-prompts" id="experiencePrompts"></div>
+          <div class="interview-composer">
+            <textarea id="experienceInput" placeholder="例如：老闆喝咖啡只加半包糖；找 Amy 前先把素材連結整理好；Ben 不喜歡臨時改預算。"></textarea>
+            <div class="interview-actions">
+              <button class="interview-send" id="experienceSendBtn" type="button">加入紀錄</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <button class="interview-fab" id="experienceFab" type="button">
+        <span>?</span>
+        經驗訪談
+      </button>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.querySelector("#fileInput");
+    const fileList = document.querySelector("#fileList");
+    const fileCount = document.querySelector("#fileCount");
+    const gapCount = document.querySelector("#gapCount");
+    const completionRate = document.querySelector("#completionRate");
+    const runReview = document.querySelector("#runReview");
+    const uploadZone = document.querySelector("#uploadZone");
+    const reviewStatus = document.querySelector("#reviewStatus");
+    const reviewSummary = document.querySelector("#reviewSummary");
+    const handoffList = document.querySelector("#handoffList");
+    const checklistTitle = document.querySelector("#checklistTitle");
+    const modeButtons = document.querySelectorAll(".mode-card");
+    const submitReviewBtn = document.querySelector("#submitReviewBtn");
+    const caseNameDisplay = document.querySelector("#caseNameDisplay");
+    const agentCheckBtn = document.querySelector("#agentCheckBtn");
+    const experienceFab = document.querySelector("#experienceFab");
+    const experiencePanel = document.querySelector("#experiencePanel");
+    const experienceCloseBtn = document.querySelector("#experienceCloseBtn");
+    const experienceLock = document.querySelector("#experienceLock");
+    const experiencePrompts = document.querySelector("#experiencePrompts");
+    const experienceInput = document.querySelector("#experienceInput");
+    const experienceSendBtn = document.querySelector("#experienceSendBtn");
+    let isAgentChecked = false;
+    let agentWarnings = {};
+    let checkedItemTitles = new Set();
+    let lastAgentReviewSummary = "";
+    let experienceAnswers = {};
+    let activeExperienceQuestionId = "";
+
+    window.uploadData = window.uploadData || {
+      projectTitle: "社群成長企劃交接案",
+      userRole: "離職同事"
+    };
+
+    const experienceQuestions = [
+      { id: "tacit-rules", text: "這份工作有哪些文件不會寫，但新人一定要知道的默契？" },
+      { id: "people-style", text: "哪些人要用什麼方式溝通比較順？有沒有偏好或地雷？" },
+      { id: "urgent-contact", text: "遇到緊急狀況時，實務上第一個該找誰？" },
+      { id: "misunderstood-process", text: "有沒有容易被誤會的流程、規則或客戶習慣？" },
+      { id: "small-details", text: "有哪些小細節會讓事情推進更順，例如開會、咖啡、稱呼或提醒方式？" },
+      { id: "others", text: "有其他想補充的東西嗎？" }
+    ];
+
+    const modes = {
+      fast: {
+        title: "交接清單",
+        items: [
+          {
+            title: "B1 工作內容",
+            text: "知道主要負責什麼、預期產出是什麼"
+          },
+          {
+            title: "B2 接手行動",
+            text: "知道目前進度、接手後第一步、重要期限"
+          },
+          {
+            title: "P1 關鍵人物",
+            text: "知道主要內外部窗口是誰、各自負責什麼"
+          },
+          {
+            title: "P2 聯絡時機",
+            text: "知道什麼事情階段應該找誰"
+          },
+          {
+            title: "A1 必要資源",
+            text: "知道工作需要哪些系統、文件或設備"
+          },
+          {
+            title: "A2 取得方式",
+            text: "知道資源在哪裡,以及如何取得權限"
+          }
+        ]
+      },
+      full: {
+        title: "交接清單",
+        items: [
+          {
+            title: "B1 工作內容",
+            text: "知道主要負責什麼、預期產出是什麼"
+          },
+          {
+            title: "B2 接手行動",
+            text: "知道目前進度、接手後第一步、重要期限"
+          },
+          {
+            title: "B3 例行與風險",
+            text: "知道不能漏掉的固定工作,以及最重要的注意事項"
+          },
+          {
+            title: "P1 關鍵人物",
+            text: "知道主要內外部窗口是誰、各自負責什麼"
+          },
+          {
+            title: "P2 聯絡時機",
+            text: "知道什麼事情階段應該找誰"
+          },
+          {
+            title: "P3 上級與外部承諾",
+            text: "知道重大問題要升級給誰、以及有沒有尚未完成的外部承諾"
+          },
+          {
+            title: "A1 必要資源",
+            text: "知道工作需要哪些系統、文件或設備"
+          },
+          {
+            title: "A2 取得方式",
+            text: "知道資源在哪裡,以及如何取得權限"
+          },
+          {
+            title: "A3 待移交事項",
+            text: "知道哪些資產或權限還沒完成移交,以及下一步"
+          }
+        ]
+      }
+    };
+
+    let currentMode = "fast";
+    let uploadedFiles = [];
+
+    function extensionLabel(name) {
+      const ext = name.split(".").pop().toUpperCase();
+      if (!ext || ext === name.toUpperCase()) return "FILE";
+      return ext.slice(0, 4);
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+      return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    }
+
+    function matchedItem(item) {
+      return uploadedFiles.some((fileObj) => fileObj.mappedItemTitle === item.title);
+    }
+
+    function clearAgentReviewForTitle(title) {
+      if (!title || title === "其他補充資料") return;
+      checkedItemTitles.delete(title);
+      delete agentWarnings[title];
+      lastAgentReviewSummary = "";
+    }
+
+    function clearAllAgentReview() {
+      isAgentChecked = false;
+      agentWarnings = {};
+      checkedItemTitles = new Set();
+      lastAgentReviewSummary = "";
+    }
+
+    function markCurrentItemsChecked() {
+      checkedItemTitles = new Set(
+        modes[currentMode].items
+          .filter(matchedItem)
+          .map((item) => item.title)
+      );
+      isAgentChecked = true;
+    }
+
+    function allMatchedItemsChecked() {
+      return modes[currentMode].items.every((item) => {
+        return !matchedItem(item) || checkedItemTitles.has(item.title);
+      });
+    }
+
+    function getApiBase() {
+      if (window.AGENT2_API_BASE) return window.AGENT2_API_BASE;
+      return window.location.protocol === "file:" ? "http://localhost:3000" : "";
+    }
+
+    function getCurrentUserRole() {
+      return window.uploadData.userRole || window.uploadData.role || "離職同事";
+    }
+
+    function isDepartingCoworker() {
+      return getCurrentUserRole() === "離職同事";
+    }
+
+    function renderExperienceInterview() {
+      if (!experiencePanel || !experiencePrompts) return;
+
+      const userRole = getCurrentUserRole();
+      const canUseInterview = isDepartingCoworker();
+      experiencePanel.classList.toggle("is-locked", !canUseInterview);
+
+      experiencePrompts.innerHTML = "";
+      experienceQuestions.forEach((question) => {
+        const answer = experienceAnswers[question.id]?.text?.trim();
+        const group = document.createElement("div");
+        group.className = "interview-prompt-group";
+
+        const button = document.createElement("button");
+        button.className = `interview-prompt ${activeExperienceQuestionId === question.id ? "is-active" : ""}`;
+        button.type = "button";
+        button.dataset.questionId = question.id;
+        button.innerHTML = `
+          <span></span>
+          <small>${answer ? "已回答，點擊可修改" : "尚未回答"}</small>
+        `;
+        button.querySelector("span").textContent = question.text;
+        button.addEventListener("click", () => {
+          if (!canUseInterview) return;
+          activeExperienceQuestionId = question.id;
+          experienceInput.value = experienceAnswers[question.id]?.text || "";
+          experienceInput.placeholder = question.text;
+          experienceInput.focus();
+          renderExperienceInterview();
+        });
+        group.append(button);
+
+        if (activeExperienceQuestionId === question.id && answer) {
+          const card = document.createElement("div");
+          card.className = "interview-answer-card";
+          card.innerHTML = `
+            <p></p>
+          `;
+          card.querySelector("p").textContent = experienceAnswers[question.id].text;
+          group.append(card);
+        }
+
+        experiencePrompts.append(group);
+      });
+    }
+
+    function getExperienceAnswerCount() {
+      return Object.values(experienceAnswers).filter((answer) => answer?.text?.trim()).length;
+    }
+
+    function saveExperienceAnswer(questionId, text) {
+      const question = experienceQuestions.find((item) => item.id === questionId);
+      if (!question) return null;
+
+      if (!text.trim()) {
+        delete experienceAnswers[questionId];
+        window.uploadData.experienceRecords = Object.values(experienceAnswers);
+        localStorage.setItem("handoffExperienceAnswers", JSON.stringify(experienceAnswers));
+        return null;
+      }
+
+      const answer = {
+        id: questionId,
+        question: question.text,
+        projectTitle: window.uploadData.projectTitle || "",
+        role: getCurrentUserRole(),
+        text,
+        createdAt: new Date().toISOString()
+      };
+
+      experienceAnswers[questionId] = answer;
+      window.uploadData.experienceRecords = Object.values(experienceAnswers);
+      localStorage.setItem("handoffExperienceAnswers", JSON.stringify(experienceAnswers));
+
+      return answer;
+    }
+
+    function loadExperienceRecords() {
+      try {
+        const storedAnswers = JSON.parse(localStorage.getItem("handoffExperienceAnswers") || "{}");
+        if (storedAnswers && !Array.isArray(storedAnswers) && typeof storedAnswers === "object") {
+          experienceAnswers = storedAnswers;
+        } else {
+          const storedRecords = JSON.parse(localStorage.getItem("handoffExperienceRecords") || "[]");
+          experienceAnswers = {};
+          if (Array.isArray(storedRecords)) {
+            storedRecords.forEach((record) => {
+              const matchingQuestion = experienceQuestions.find((question) => question.text === record.question);
+              if (matchingQuestion) experienceAnswers[matchingQuestion.id] = record;
+            });
+          }
+        }
+
+        window.uploadData.experienceRecords = Object.values(experienceAnswers);
+      } catch {
+        experienceAnswers = {};
+      }
+    }
+
+    function submitExperienceInterview() {
+      if (!isDepartingCoworker()) {
+        alert("經驗訪談目前只開放離職同事使用。");
+        return;
+      }
+
+      if (!activeExperienceQuestionId) {
+        alert("請先選擇一個訪談問題。");
+        return;
+      }
+
+      const text = experienceInput.value.trim();
+      const savedAnswer = saveExperienceAnswer(activeExperienceQuestionId, text);
+      activeExperienceQuestionId = "";
+      experienceInput.value = "";
+      experienceInput.placeholder = "例如：老闆喝咖啡只加半包糖；找 Amy 前先把素材連結整理好；Ben 不喜歡臨時改預算。";
+
+      renderExperienceInterview();
+    }
+
+    function canExtractText(file) {
+      const name = file.name.toLowerCase();
+      const textExtensions = [".txt", ".md", ".csv", ".json", ".yaml", ".yml", ".html", ".xml"];
+      return file.type.startsWith("text/") || textExtensions.some((ext) => name.endsWith(ext));
+    }
+
+    function canServerExtract(file) {
+      const name = file.name.toLowerCase();
+      return name.endsWith(".pdf") || name.endsWith(".docx");
+    }
+
+    async function parseDocumentOnServer(file) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${getApiBase()}/api/documents`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorPayload = await response.json().catch(() => null);
+        throw new Error(errorPayload?.detail || errorPayload?.message || `Document parse failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const documentResult = result.documents?.[0];
+
+      if (!documentResult?.ok) {
+        return {
+          extractedText: "",
+          extractionStatus: documentResult?.extractionStatus || "failed"
+        };
+      }
+
+      return {
+        extractedText: documentResult.extractedText || "",
+        extractionStatus: documentResult.extractionStatus || "ok"
+      };
+    }
+
+    async function readFileText(file) {
+      if (!canExtractText(file)) {
+        if (canServerExtract(file)) {
+          return parseDocumentOnServer(file);
+        }
+
+        return {
+          extractedText: "",
+          extractionStatus: "unsupported"
+        };
+      }
+
+      try {
+        return {
+          extractedText: await file.text(),
+          extractionStatus: "ok"
+        };
+      } catch {
+        return {
+          extractedText: "",
+          extractionStatus: "failed"
+        };
+      }
+    }
+
+    async function buildAgentReviewPayload() {
+      const files = await Promise.all(uploadedFiles.map(async (fileObj) => {
+        const textResult = await readFileText(fileObj.file);
+
+        return {
+          id: fileObj.id,
+          fileName: fileObj.file.name,
+          size: fileObj.file.size,
+          type: fileObj.file.type,
+          mappedItemTitle: fileObj.mappedItemTitle,
+          extractedText: textResult.extractedText,
+          extractionStatus: textResult.extractionStatus
+        };
+      }));
+
+      return {
+        projectTitle: window.uploadData.projectTitle,
+        mode: currentMode,
+        checklist: modes[currentMode].items,
+        files
+      };
+    }
+
+    function renderCaseInfo() {
+      if (caseNameDisplay) {
+        caseNameDisplay.textContent = window.uploadData.projectTitle || "未命名專案";
+      }
+    }
+
+    function renderFiles() {
+      fileList.innerHTML = "";
+
+      if (uploadedFiles.length === 0) {
+        fileList.innerHTML = `<li class="empty-file-state">目前還沒有上傳資料。</li>`;
+        return;
+      }
+
+      const mode = modes[currentMode];
+
+      uploadedFiles.forEach((fileObj) => {
+        let optionsHTML = `<option value="">-- 請選擇對應的交接項目 --</option>`;
+        mode.items.forEach(item => {
+          const isSelected = fileObj.mappedItemTitle === item.title ? "selected" : "";
+          optionsHTML += `<option value="${item.title}" ${isSelected}>${item.title}</option>`;
+        });
+
+        const isOtherSelected = fileObj.mappedItemTitle === "其他補充資料" ? "selected" : "";
+        optionsHTML += `<option value="其他補充資料" ${isOtherSelected}>其他補充資料（不影響進度）</option>`;
+
+        const row = document.createElement("li");
+        row.className = "file-row";
+        row.innerHTML = `
+          <span class="file-type">${extensionLabel(fileObj.file.name)}</span>
+          <div class="file-main">
+            <p class="file-name"></p>
+            <div class="file-meta">
+              ${formatSize(fileObj.file.size)}
+              <br>
+              <select class="item-selector" data-id="${fileObj.id}">
+                ${optionsHTML}
+              </select>
+            </div>
+          </div>
+          <button type="button" class="remove-btn" data-id="${fileObj.id}" style="background: var(--danger-soft); border: 1px solid transparent; color: var(--danger); border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 180ms ease;">
+            移除
+          </button>
+        `;
+        
+        row.querySelector(".file-name").textContent = fileObj.file.name;
+        fileList.append(row);
+      });
+    }
+
+    function renderChecklist() {
+      const mode = modes[currentMode];
+      const matchedCount = mode.items.filter(matchedItem).length;
+      const missingCount = uploadedFiles.length === 0 ? 0 : mode.items.length - matchedCount;
+      const rate = uploadedFiles.length === 0 ? 0 : Math.round((matchedCount / mode.items.length) * 100);
+
+      checklistTitle.textContent = mode.title;
+      fileCount.textContent = String(uploadedFiles.length);
+      gapCount.textContent = String(missingCount);
+      completionRate.textContent = `${rate}%`;
+
+      const allUploaded = uploadedFiles.length > 0 && missingCount === 0;
+      const allChecked = allUploaded && allMatchedItemsChecked();
+      const hasWarnings = Object.keys(agentWarnings).length > 0;
+
+      if (allUploaded) {
+        agentCheckBtn.disabled = false;
+        agentCheckBtn.style.cursor = "pointer";
+      }
+      else {
+        agentCheckBtn.disabled = true;
+        agentCheckBtn.style.cursor = "not-allowed";
+      }
+
+      reviewStatus.style.cssText = "";
+
+      if (uploadedFiles.length === 0) {
+        reviewStatus.textContent = "尚未上傳";
+        reviewStatus.className = "status-pill status-warning";
+        reviewSummary.textContent = "目前尚未上傳資料。";
+
+        submitReviewBtn.disabled = true;
+        submitReviewBtn.style.cursor = "not-allowed";
+      }
+      else if (!allUploaded) {
+        reviewStatus.textContent = `缺 ${missingCount} 項`;
+        reviewStatus.className = "status-pill status-danger";
+        reviewSummary.textContent = `目前已上傳 ${uploadedFiles.length} 份資料，還有 ${missingCount} 項清單項目沒有對應檔案。`;
+        submitReviewBtn.disabled = true;
+        submitReviewBtn.style.cursor = "not-allowed";
+      }
+      else if (!allChecked) {
+        reviewStatus.textContent = "待檢查";
+        reviewStatus.className = "status-pill status-warning";
+        reviewSummary.textContent = "清單項目已齊全。送出審核前，請先執行「Agent 快速欄位檢查」。";
+        submitReviewBtn.disabled = true;
+        submitReviewBtn.style.cursor = "not-allowed";
+      }
+      else if (hasWarnings) {
+        reviewStatus.textContent = "需修正";
+        reviewStatus.className = "status-pill"; 
+        reviewStatus.style.cssText = "background: #fdf0d5; color: #b87b00;";
+        reviewSummary.textContent = lastAgentReviewSummary || "Agent 檢查發現部分文件需修正或確認，請點擊黃色項目查看建議。";
+        submitReviewBtn.disabled = true;
+        submitReviewBtn.style.cursor = "not-allowed";
+      } else {
+        reviewStatus.textContent = "可送審";
+        reviewStatus.className = "status-pill status-done";
+        reviewSummary.textContent = lastAgentReviewSummary || "Agent 檢查完畢無誤！目前檔案皆已準備就緒，可交給主管審核。";
+        submitReviewBtn.disabled = false;
+        submitReviewBtn.style.cursor = "pointer";
+      }
+
+      handoffList.innerHTML = "";
+      mode.items.forEach((item) => {
+        const isPending = uploadedFiles.length === 0;
+        const isDone = uploadedFiles.length > 0 && matchedItem(item);
+        const isChecked = checkedItemTitles.has(item.title);
+        const warningMsg = agentWarnings[item.title];
+        const isWarning = isDone && warningMsg;
+
+        let rowState;
+        if (isPending) rowState = "is-pending";
+        else if (isWarning) rowState = "is-warning";
+        else if (isDone) rowState = "is-done";
+        else rowState = "is-missing";
+
+        let statusClass = "status-warning";
+        let statusText = "待上傳";
+        
+        if (isWarning) {
+          statusClass = "status-warning";
+          statusText = "待修改";
+        }
+        else if (isDone) {
+          statusClass = "status-done";
+          statusText = isChecked ? "已確認" : "已上傳";
+        }
+        else if (!isPending && !isDone) {
+          statusClass = "status-danger";
+          statusText = "缺資料";
+        }
+
+        let feedbackHTML = "";
+        let customStatusStyle = "";
+        
+        if (isWarning) {
+          customStatusStyle = "background: #fdf0d5; color: #b87b00;";
+          feedbackHTML = `
+            <div class="agent-feedback">
+              <strong style="display:block; margin-bottom: 6px; font-size: 13px;">Agent 審閱建議：</strong>
+              <p style="margin: 0;">${warningMsg}</p>
+              <button type="button" class="resolve-btn" data-title="${item.title}">已確認建議並移除原先檔案</button>
+            </div>
+          `;
+        }
+
+        const row = document.createElement("li");
+        row.className = `handoff-item ${rowState}`;
+        row.innerHTML = `
+          <span class="item-dot"></span>
+          <div class="item-main">
+            <p class="item-title">${item.title}</p>
+            <p class="item-text">${item.text}</p>
+          </div>
+          <span class="status-pill ${statusClass}" style="${customStatusStyle}">${statusText}</span>
+          ${feedbackHTML}
+        `;
+        handoffList.append(row);
+      });
+    }
+
+    function renderPage() {
+      renderCaseInfo();
+      renderFiles();
+      renderChecklist();
+    }
+
+    function addFiles(files) {
+      const newFiles = Array.from(files).map(f => ({
+        id: Date.now().toString() + Math.random().toString(36).substring(2),
+        file: f,
+        mappedItemTitle: ""
+      }));
+      uploadedFiles = uploadedFiles.concat(newFiles);
+      renderPage();
+    }
+
+    fileList.addEventListener('change', (e) => {
+      if (e.target.classList.contains('item-selector')) {
+        const fileId = e.target.getAttribute('data-id');
+        const selectedTitle = e.target.value;
+        
+        const fileObj = uploadedFiles.find(f => f.id === fileId);
+        if (fileObj) {
+          const previousTitle = fileObj.mappedItemTitle;
+          fileObj.mappedItemTitle = selectedTitle;
+          clearAgentReviewForTitle(previousTitle);
+          clearAgentReviewForTitle(selectedTitle);
+          renderChecklist();
+        }
+      }
+    });
+
+    fileList.addEventListener('click', (e) => {
+      if (e.target.classList.contains('remove-btn')) {
+        const fileId = e.target.getAttribute('data-id');
+        const removedFile = uploadedFiles.find(f => f.id === fileId);
+
+        uploadedFiles = uploadedFiles.filter(f => f.id !== fileId);
+        if (removedFile) {
+          clearAgentReviewForTitle(removedFile.mappedItemTitle);
+        }
+        renderPage();
+      }
+    });
+
+    modeButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        currentMode = button.dataset.mode;
+        clearAllAgentReview();
+        modeButtons.forEach((item) => item.classList.toggle("is-active", item === button));
+        renderPage();
+      });
+    });
+
+    fileInput.addEventListener("change", (event) => {
+      addFiles(event.target.files);
+      fileInput.value = "";
+    });
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      uploadZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        uploadZone.classList.add("is-dragover");
+      });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      uploadZone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        uploadZone.classList.remove("is-dragover");
+      });
+    });
+
+    uploadZone.addEventListener("drop", (event) => {
+      addFiles(event.dataTransfer.files);
+    });
+
+    agentCheckBtn.addEventListener("click", async () => {
+      agentCheckBtn.disabled = true;
+      agentCheckBtn.style.cursor = "not-allowed";
+      agentCheckBtn.textContent = "檢查中...";
+
+      try {
+        const response = await fetch(`${getApiBase()}/api/agent/review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(await buildAgentReviewPayload())
+        });
+
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => null);
+          throw new Error(errorPayload?.detail || errorPayload?.message || `Agent review failed: ${response.status}`);
+        }
+
+        const result = await response.json();
+        markCurrentItemsChecked();
+        lastAgentReviewSummary = result.summary || "";
+        agentWarnings = {};
+
+        (result.issues || [])
+          .filter((issue) => issue.blocking)
+          .forEach((issue) => {
+            agentWarnings[issue.itemTitle] = issue.message;
+          });
+
+        renderChecklist();
+      } catch (error) {
+        console.error(error);
+        alert(`Agent 檢查失敗：${error.message}\n\n請確認後端已啟動，且 OpenClaw API 設定正確。`);
+      } finally {
+        agentCheckBtn.textContent = "Agent 快速欄位檢查";
+        renderChecklist();
+      }
+    });
+
+    handoffList.addEventListener("click", (e) => {
+      if (e.target.classList.contains("resolve-btn")) {
+        e.stopPropagation();
+        const title = e.target.dataset.title;
+
+        const filesToRemove = uploadedFiles.filter(f => f.mappedItemTitle === title);
+
+        if (filesToRemove.length > 0) {
+          const fileNames = filesToRemove.map(f => f.file.name).join("\n- ");
+          
+          const isConfirmed = confirm(`即將移除以下檔案：\n- ${fileNames}\n\n您確定要移除並重新上傳嗎？`);
+          
+          if (!isConfirmed) {
+            return;
+          }
+        }
+
+        clearAgentReviewForTitle(title);
+        uploadedFiles = uploadedFiles.filter(f => f.mappedItemTitle !== title);
+
+        renderPage();
+        return;
+      }
+
+      const itemRow = e.target.closest('.handoff-item.is-warning');
+      if (itemRow) {
+        const feedback = itemRow.querySelector('.agent-feedback');
+        if (feedback) feedback.classList.toggle('is-visible');
+      }
+    });
+
+    submitReviewBtn.addEventListener("click", () => {
+      const unassignedFiles = uploadedFiles.filter(f => !f.mappedItemTitle || f.mappedItemTitle === "");
+
+      if (unassignedFiles.length > 0) {
+        const isConfirmed = confirm(`您有 ${unassignedFiles.length} 份檔案尚未選擇對應的交接項目。\n這些檔案將會自動被分類為「其他補充資料」。\n\n您確定要繼續交給主管審核嗎？`);
+        
+        if (!isConfirmed) {
+          return; 
+        }
+
+        unassignedFiles.forEach(f => {
+          f.mappedItemTitle = "其他補充資料"; 
+        });
+
+        renderPage();
+      }
+
+      alert("交接資料已成功送出給主管審核！\n(此為前端展示，實務上將在此處發送 API 儲存資料)");
+    });
+
+    if (experienceFab) {
+      experienceFab.addEventListener("click", () => {
+        experiencePanel.classList.toggle("is-open");
+        renderExperienceInterview();
+      });
+    }
+
+    if (experienceCloseBtn) {
+      experienceCloseBtn.addEventListener("click", () => {
+        experiencePanel.classList.remove("is-open");
+      });
+    }
+
+    if (experienceSendBtn) {
+      experienceSendBtn.addEventListener("click", submitExperienceInterview);
+    }
+
+    if (experienceInput) {
+      experienceInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+          submitExperienceInterview();
+        }
+      });
+    }
+
+    loadExperienceRecords();
+    renderExperienceInterview();
+    renderPage();
+  </script>
+</body>
+</html>

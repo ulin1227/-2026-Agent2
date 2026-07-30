@@ -1,0 +1,1057 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>接續 - 主管審核</title>
+  <link rel="stylesheet" href="./globals.css">
+  <style>
+    .review-shell {
+      min-height: 100vh;
+      background: var(--canvas);
+    }
+
+    .review-shell .workspace {
+      min-width: 0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .review-shell .content-scroll {
+      overflow: auto;
+      padding: 25px 27px 38px;
+    }
+
+    .review-shell .topbar h1 {
+      font-size: 24px;
+    }
+
+    .review-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .review-actions .primary-button,
+    .review-actions .ghost-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .review-actions .primary-button:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .project-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+      background: #fff;
+      text-align: left;
+    }
+
+    .project-heading h2,
+    .project-heading span,
+    .project-heading small {
+      display: block;
+    }
+
+    .project-heading h2 {
+      margin: 5px 0 0;
+      font: 500 19px/1.4 Georgia, "Noto Serif TC", serif;
+    }
+
+    .project-heading span {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .project-heading small {
+      margin-top: 8px;
+      color: var(--sage-dark);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .summary-grid,
+    .review-layout,
+    .case-strip {
+      max-width: 1180px;
+      margin-inline: auto;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 17px;
+    }
+
+    .summary-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      box-shadow: 0 9px 28px rgba(48, 65, 56, 0.045);
+    }
+
+    .summary-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .summary-card strong {
+      display: block;
+      margin-top: 4px;
+      font: 500 26px/1.2 Georgia, "Noto Serif TC", serif;
+    }
+
+    .case-strip {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr 0.8fr;
+      gap: 12px;
+      margin-bottom: 17px;
+      padding: 18px;
+    }
+
+    .case-info {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+    }
+
+    .case-info b,
+    .case-info span {
+      display: block;
+    }
+
+    .case-info b {
+      font-size: 13px;
+    }
+
+    .case-info span {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .review-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 520px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .review-panel {
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .review-layout > .review-panel:last-child {
+      width: 520px;
+      max-width: 520px;
+      min-width: 0;
+      justify-self: stretch;
+    }
+
+    .review-panel-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .review-panel-header > div {
+      min-width: 0;
+    }
+
+    .review-panel-header h2 {
+      margin: 5px 0 0;
+      font: 500 19px/1.4 Georgia, "Noto Serif TC", serif;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .review-panel-header p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .review-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 18px;
+      list-style: none;
+    }
+
+    .review-item {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 34px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      min-height: 82px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .review-item:hover,
+    .review-item.is-active {
+      border-color: var(--sage);
+      box-shadow: 0 9px 24px rgba(48, 65, 56, 0.07);
+      transform: translateY(-1px);
+    }
+
+    .review-item.is-returned {
+      border-color: rgba(168, 94, 85, 0.35);
+      background: #fff8f7;
+    }
+
+    .review-icon {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--blue-soft);
+      color: var(--sage-dark);
+      font: 700 10px/1 Georgia, "Noto Serif TC", serif;
+    }
+
+    .review-item-main {
+      min-width: 0;
+    }
+
+    .review-item-main b,
+    .review-item-main span,
+    .review-item-main small {
+      display: block;
+    }
+
+    .review-item-main b {
+      overflow: hidden;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .review-item-main span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .review-item-main small {
+      margin-top: 5px;
+      color: var(--sage-dark);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 26px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-done {
+      background: var(--sage-soft);
+      color: var(--sage-dark);
+    }
+
+    .status-warning {
+      background: var(--warning-soft);
+      color: var(--warning);
+    }
+
+    .status-danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .detail-panel {
+      min-width: 0;
+      padding: 24px;
+    }
+
+    .detail-title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .detail-title-row > div {
+      flex: 1;
+      min-width: 0; 
+    }
+
+    .detail-title-row h3 {
+      margin: 0;
+      font: 500 24px/1.35 Georgia, "Noto Serif TC", serif;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .detail-title-row p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #downloadFileBtn {
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      background: var(--sage-soft);
+      color: var(--sage-dark);
+      border-color: transparent;
+    }
+
+    #downloadFileBtn:hover {
+      background: #dce5df;
+      border-color: transparent;
+    }
+
+    .file-preview {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(255, 254, 251, 0.96), rgba(246, 248, 244, 0.96)),
+        var(--paper);
+      overflow: hidden;
+    }
+
+    .file-preview-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .file-preview-head > div {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .file-preview-head b,
+    .file-preview-head span {
+      display: block;
+    }
+
+    .file-preview-head b {
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-preview-head span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .preview-body {
+      min-height: 210px;
+      padding: 18px;
+    }
+
+    .preview-line {
+      height: 10px;
+      margin-bottom: 10px;
+      border-radius: 999px;
+      background: #e4eae5;
+    }
+
+    .preview-line:nth-child(1) {
+      width: 82%;
+    }
+
+    .preview-line:nth-child(2) {
+      width: 64%;
+    }
+
+    .preview-line:nth-child(3) {
+      width: 92%;
+    }
+
+    .preview-line:nth-child(4) {
+      width: 32%;
+    }
+
+    .preview-line:nth-child(5) {
+      width: 48%;
+    }
+
+    .preview-line:nth-child(6) {
+      width: 75%;
+    }
+
+    .preview-line:nth-child(7) {
+      width: 65%;
+    }
+
+    .preview-line:nth-child(8) {
+      width: 88%;
+    }
+
+    .review-form {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .review-field label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .review-field textarea,
+    .review-field select {
+      width: 100%;
+      border: 1px solid #cfd9d1;
+      border-radius: 11px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+    }
+
+    .review-field textarea {
+      min-height: 84px;
+      padding: 11px 12px;
+      resize: vertical;
+      line-height: 1.7;
+    }
+
+    .review-field select {
+      min-height: 40px;
+      padding: 0 10px;
+    }
+
+    .review-field textarea:focus,
+    .review-field select:focus {
+      outline: 0;
+      border-color: #8fa697;
+      box-shadow: 0 0 0 3px rgba(86, 119, 102, 0.08);
+    }
+
+    .decision-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .decision-actions .primary-button,
+    .decision-actions .ghost-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      line-height: 1;
+    }
+
+    .return-button {
+      min-height: 42px;
+      border: 1px solid #e1c3be;
+      border-radius: 10px;
+      background: var(--danger-soft);
+      color: var(--danger);
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 180ms ease;
+    }
+
+    .return-button:hover {
+      border-color: #d8aaa4;
+      transform: translateY(-1px);
+    }
+
+    .audit-note {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcf9;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .completion-banner {
+      display: none;
+      max-width: 1180px;
+      margin: 17px auto 0;
+      padding: 16px 18px;
+      border: 1px solid rgba(86, 119, 102, 0.28);
+      border-radius: 14px;
+      background: var(--sage-soft);
+      color: var(--sage-dark);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .completion-banner.is-visible {
+      display: block;
+    }
+
+    @media (max-width: 980px) {
+      .review-shell .workspace {
+        height: auto;
+        overflow: visible;
+      }
+
+      .review-shell .content-scroll {
+        overflow: visible;
+        padding: 18px;
+      }
+
+      .summary-grid,
+      .case-strip,
+      .review-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .review-layout > .review-panel:last-child {
+        width: 100%;
+        max-width: none;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .review-shell .topbar {
+        position: sticky;
+        top: 0;
+      }
+
+      .review-actions .ghost-button {
+        display: none;
+      }
+
+      .review-item,
+      .detail-title-row,
+      .file-preview-head,
+      .decision-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .review-item {
+        display: grid;
+      }
+
+      .review-item .status-pill {
+        justify-self: start;
+      }
+
+      .case-strip {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="review-shell">
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="score-pill score-warn">離職交接進度：2/3</div>
+          <h1>主管確認交接資料</h1>
+        </div>
+        <div class="review-actions">
+          <button class="ghost-button" type="button" id="returnAllButton">退回補件</button>
+          <button class="primary-button" type="button" id="finishButton" disabled>審核完成</button>
+        </div>
+      </header>
+
+      <div class="content-scroll">
+        <section class="summary-grid" aria-label="審核狀態摘要">
+          <div class="summary-card">
+            <span>送審項目</span>
+            <strong id="totalCount">0</strong>
+          </div>
+          <div class="summary-card">
+            <span>已確認</span>
+            <strong id="approvedCount">0</strong>
+          </div>
+          <div class="summary-card">
+            <span>需補件</span>
+            <strong id="returnedCount">0</strong>
+          </div>
+          <div class="summary-card">
+            <span>審核進度</span>
+            <strong id="reviewRate">0%</strong>
+          </div>
+        </section>
+
+        <section class="map-panel case-strip" aria-label="交接案件資訊">
+          <div class="project-heading" style="cursor: default;">
+            <div>
+              <div class="eyebrow">PROJECT</div>
+              <h2 id="caseNameDisplay">載入中...</h2>
+              <span id="caseModeDisplay">載入中...</span>
+              <small id="casePriorityDisplay"></small>
+            </div>
+          </div>
+        </section>
+
+        <section class="review-layout">
+          <article class="map-panel review-panel">
+            <div class="review-panel-header">
+              <div>
+                <div class="eyebrow">SUBMITTED FILES</div>
+                <h2>待審交接項目</h2>
+              </div>
+              <span class="status-pill status-warning" id="queueStatus">待審核</span>
+            </div>
+            <ul class="review-list" id="reviewList"></ul>
+          </article>
+
+          <article class="map-panel review-panel">
+            <div class="review-panel-header">
+              <div>
+                <div class="eyebrow">SUPERVISOR REVIEW</div>
+                <h2>審核內容</h2>
+              </div>
+              <span class="status-pill status-warning" id="detailStatus">待審核</span>
+            </div>
+
+            <div class="detail-panel">
+              <div class="detail-title-row">
+                <div>
+                  <h3 id="detailTitle">載入中...</h3>
+                  <p id="detailDescription">載入中...</p>
+                </div>
+
+                <button class="ghost-button" type="button" id="downloadFileBtn" style="display: none;">
+                  下載檔案
+                </button>
+              </div>
+
+              <div class="file-preview" aria-label="文件預覽">
+                <div class="file-preview-head">
+                  <div>
+                    <b id="detailFileName">-</b>
+                    <span id="detailFileMeta">-</span>
+                  </div>
+                </div>
+                <div class="preview-body">
+                  <div class="preview-line"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-line"></div>
+                  <div class="preview-line"></div>
+                </div>
+              </div>
+
+              <div class="review-form">
+                <div class="review-field">
+                  <label for="reviewDecision">審核判斷</label>
+                  <select id="reviewDecision">
+                    <option value="pending">尚未判斷</option>
+                    <option value="approved">確認正確</option>
+                    <option value="returned">退回補件</option>
+                  </select>
+                </div>
+
+                <div class="review-field">
+                  <label for="reviewNote">主管備註</label>
+                  <textarea id="reviewNote" placeholder="例如：請補上 7 月之後的任務狀態，或確認此文件可直接交給新人。"></textarea>
+                </div>
+
+                <div class="decision-actions">
+                  <button class="primary-button" type="button" id="approveButton">保存審核狀態</button>
+                </div>
+              </div>
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // 確保 DOM 完全載入後才執行 JavaScript
+    document.addEventListener("DOMContentLoaded", () => {
+      
+      // 動態資料來源，可由後端 API 或 localStorage 注入
+      window.reviewData = window.reviewData || {
+        projectTitle: "社群成長企劃交接案",
+        modeTitle: "最低可接手模式",
+        modePriority: "適合：臨時離職、交接時間很短、只求新人不斷線。",
+        uploadedFiles: [
+          { 
+            id: "f1", 
+            mappedTitle: "B1 工作內容",
+            fileDescription: "知道主要負責什麼、預期產出是什麼",
+            fileName: "目前負責事項與優先順序.pdf", 
+            fileSize: "1.8 MB"
+          },
+          { 
+            id: "f2", 
+            mappedTitle: "B2 接手行動",
+            fileDescription: "知道目前進度、接手後第一步、重要期限",
+            fileName: "未完成事項_待辦與下一步.docx", 
+            fileSize: "642 KB"
+          },
+          { 
+            id: "f3", 
+            mappedTitle: "P1 關鍵人物",
+            fileDescription: "知道主要內外部窗口是誰、各自負責什麼",
+            fileName: "重要聯絡人與權限.pdf", 
+            fileSize: "512 KB"
+          },
+          { 
+            id: "f4", 
+            mappedTitle: "P2 聯絡時機",
+            fileDescription: "知道什麼事情階段應該找誰",
+            fileName: "重要聯絡人與權限.pdf", 
+            fileSize: "412 KB"
+          },
+          { 
+            id: "f5", 
+            mappedTitle: "A1 必要資源",
+            fileDescription: "知道工作需要哪些系統、文件或設備",
+            fileName: "固定流程或 SOP.docx", 
+            fileSize: "642 KB"
+          },
+          { 
+            id: "f6", 
+            mappedTitle: "A2 取得方式",
+            fileDescription: "知道資源在哪裡,以及如何取得權限",
+            fileName: "固定流程或 SOP.docx", 
+            fileSize: "338 KB"
+          },
+          { 
+            id: "f7", 
+            mappedTitle: "其他補充資料",
+            fileDescription: "離職同事額外提供的補充檔案。",
+            fileName: "重要聯絡人清冊.xlsx", 
+            fileSize: "1.2 MB"
+          }
+        ]
+      };
+
+      const filesArray = Array.isArray(window.reviewData.uploadedFiles) ? window.reviewData.uploadedFiles : [];
+
+      let reviewItems = filesArray.map((file) => {
+        const isOther = file.mappedTitle === "其他";
+        const safeFileName = file.fileName || "未命名檔案";
+        const fileExt = safeFileName.includes(".") ? safeFileName.split(".").pop().toUpperCase() : "FILE";
+        
+        return {
+          id: file.id,
+          title: isOther ? `其他補充資料：${safeFileName}` : (file.mappedTitle || "未指定項目"),
+          description: isOther ? "離職同事額外提供的補充檔案。" : (file.fileDescription || "未指定項目"),
+          fileName: safeFileName,
+          fileMeta: `${fileExt} · ${file.fileSize || "未知大小"}`,
+          summary: file.summary || "請主管確認內容是否足以讓新人接手。",
+          status: "pending",
+          note: ""
+        };
+      });
+
+      const caseNameDisplay = document.querySelector("#caseNameDisplay");
+      const caseModeDisplay = document.querySelector("#caseModeDisplay");
+      const reviewList = document.querySelector("#reviewList");
+      const totalCount = document.querySelector("#totalCount");
+      const approvedCount = document.querySelector("#approvedCount");
+      const returnedCount = document.querySelector("#returnedCount");
+      const reviewRate = document.querySelector("#reviewRate");
+      const queueStatus = document.querySelector("#queueStatus");
+      const detailStatus = document.querySelector("#detailStatus");
+      const detailTitle = document.querySelector("#detailTitle");
+      const detailDescription = document.querySelector("#detailDescription");
+      const detailFileName = document.querySelector("#detailFileName");
+      const detailFileMeta = document.querySelector("#detailFileMeta");
+      const previewText = document.querySelector("#previewText");
+      const reviewDecision = document.querySelector("#reviewDecision");
+      const reviewNote = document.querySelector("#reviewNote");
+      const approveButton = document.querySelector("#approveButton");
+      const returnButton = document.querySelector("#returnButton");
+      const finishButton = document.querySelector("#finishButton");
+      const returnAllButton = document.querySelector("#returnAllButton");
+      const completionBanner = document.querySelector("#completionBanner");
+      const downloadFileBtn = document.querySelector("#downloadFileBtn");
+
+      let activeId = reviewItems.length > 0 ? reviewItems[0].id : null;
+
+      function statusText(status) {
+        if (status === "approved") return "確認正確";
+        if (status === "returned") return "退回補件";
+        return "尚未判斷";
+      }
+
+      function statusClass(status) {
+        if (status === "approved") return "status-done";
+        if (status === "returned") return "status-danger";
+        return "status-warning";
+      }
+
+      function renderCaseInfo() {
+        if (caseNameDisplay) caseNameDisplay.textContent = window.reviewData.projectTitle || "未知專案";
+        if (caseModeDisplay) caseModeDisplay.textContent = `交接期模式：${window.reviewData.modeTitle || ""}`;
+        
+        const casePriorityDisplay = document.querySelector("#casePriorityDisplay");
+        if (casePriorityDisplay) casePriorityDisplay.textContent = window.reviewData.modePriority || "";
+      }
+
+      function renderList() {
+        if (!reviewList) return;
+        reviewList.innerHTML = "";
+        
+        if (reviewItems.length === 0) {
+          reviewList.innerHTML = `<li style="padding: 24px; text-align: center; color: var(--muted); font-size: 12px;">目前沒有待審核的項目。</li>`;
+          return;
+        }
+
+        reviewItems.forEach((item) => {
+          const button = document.createElement("button");
+          button.className = `review-item ${item.id === activeId ? "is-active" : ""} ${item.status === "returned" ? "is-returned" : ""}`;
+          button.type = "button";
+          button.dataset.id = item.id;
+          
+          const extLabel = item.fileName.includes(".") ? item.fileName.split(".").pop().slice(0, 4).toUpperCase() : "FILE";
+          
+          button.innerHTML = `
+            <span class="review-icon">${extLabel}</span>
+            <span class="review-item-main">
+              <b></b>
+              <span></span>
+              <small></small>
+            </span>
+            <span class="status-pill ${statusClass(item.status)}">${statusText(item.status)}</span>
+          `;
+          button.querySelector("b").textContent = item.title;
+          button.querySelector(".review-item-main span").textContent = item.fileName;
+          button.querySelector("small").textContent = item.note ? `主管備註：${item.note}` : "尚未留下備註";
+          reviewList.append(button);
+        });
+      }
+
+      function renderSummary() {
+        if (!totalCount) return;
+        
+        const total = reviewItems.length;
+        if (total === 0) {
+          totalCount.textContent = "0";
+          if(approvedCount) approvedCount.textContent = "0";
+          if(returnedCount) returnedCount.textContent = "0";
+          if(reviewRate) reviewRate.textContent = "0%";
+          if(queueStatus) {
+            queueStatus.textContent = "無資料";
+            queueStatus.className = "status-pill status-warning";
+          }
+          if(finishButton) finishButton.disabled = true;
+          return;
+        }
+
+        const approved = reviewItems.filter((item) => item.status === "approved").length;
+        const returned = reviewItems.filter((item) => item.status === "returned").length;
+        const handled = approved + returned;
+        const rate = Math.round((handled / total) * 100);
+        const allHandled = handled === total;
+        const canFinish = allHandled && returned === 0;
+
+        totalCount.textContent = String(total);
+        if(approvedCount) approvedCount.textContent = String(approved);
+        if(returnedCount) returnedCount.textContent = String(returned);
+        if(reviewRate) reviewRate.textContent = `${rate}%`;
+        if(queueStatus) {
+          queueStatus.textContent = allHandled ? "已標記完畢" : "待審核";
+          queueStatus.className = `status-pill ${allHandled ? "status-done" : "status-warning"}`;
+        }
+        
+        if(finishButton) {
+          finishButton.disabled = !canFinish;
+          finishButton.textContent = "審核完成";
+        }
+        
+        if(completionBanner) {
+          completionBanner.classList.toggle("is-visible", allHandled && canFinish);
+        }
+      }
+
+      function renderDetail() {
+        if (!detailTitle) return;
+
+        if (reviewItems.length === 0) {
+          detailTitle.textContent = "無待審項目";
+          if(detailDescription) detailDescription.textContent = "目前沒有可預覽的檔案。";
+          if(detailFileName) detailFileName.textContent = "-";
+          if(detailFileMeta) detailFileMeta.textContent = "-";
+          if(previewText) previewText.textContent = "-";
+          if(downloadFileBtn) downloadFileBtn.style.display = "none";
+          return;
+        }
+
+        const activeItem = reviewItems.find((item) => item.id === activeId) || reviewItems[0];
+        
+        detailTitle.textContent = activeItem.title;
+        if(detailDescription) detailDescription.textContent = activeItem.description;
+        if(detailFileName) detailFileName.textContent = activeItem.fileName;
+        if(detailFileMeta) detailFileMeta.textContent = activeItem.fileMeta;
+        if(previewText) previewText.textContent = activeItem.summary;
+        if(reviewDecision) reviewDecision.value = activeItem.status;
+        if(reviewNote) reviewNote.value = activeItem.note;
+        
+        if(detailStatus) {
+          detailStatus.textContent = statusText(activeItem.status);
+          detailStatus.className = `status-pill ${statusClass(activeItem.status)}`;
+        }
+
+        if(downloadFileBtn) {
+          downloadFileBtn.style.display = "inline-flex";
+          downloadFileBtn.dataset.url = activeItem.fileUrl || "#"; 
+          downloadFileBtn.dataset.filename = activeItem.fileName;
+        }
+      }
+
+      function renderPage() {
+        renderCaseInfo();
+        renderList();
+        renderSummary();
+        renderDetail();
+      }
+
+      // 事件綁定 (加入安全判斷)
+      if (reviewList) {
+        reviewList.addEventListener("click", (event) => {
+          const itemButton = event.target.closest(".review-item");
+          if (!itemButton) return;
+          activeId = itemButton.dataset.id;
+          renderPage();
+        });
+      }
+
+      if (reviewDecision) {
+        reviewDecision.addEventListener("change", () => {
+          if (reviewNote) {
+            reviewNote.value = "";
+          }
+        });
+      }
+
+      if (approveButton) {
+        approveButton.addEventListener("click", () => {
+          const activeItem = reviewItems.find((item) => item.id === activeId);
+          if (activeItem) {
+            const currentDecision = reviewDecision ? reviewDecision.value : "pending";
+            const currentNote = reviewNote ? reviewNote.value.trim() : "";
+
+            activeItem.status = currentDecision;
+
+            if (currentDecision === "pending") {
+              activeItem.note = currentNote || "尚未留下備註。";
+            } else if (currentDecision === "approved") {
+              activeItem.note = currentNote || "主管已確認此資料可作為交接依據。";
+            } else if (currentDecision === "returned") {
+              activeItem.note = currentNote || "請補充內容後重新送審。";
+            }
+
+            renderPage();
+          }
+        });
+      }
+
+      if (returnAllButton) {
+        returnAllButton.addEventListener("click", () => {
+          const pendingItems = reviewItems.filter((item) => item.status === "pending");
+          pendingItems.forEach((item) => {
+            item.status = "returned";
+            item.note = item.note || "主管尚未確認，請補充後重新送審。";
+          });
+          renderPage();
+        });
+      }
+
+      if (finishButton) {
+        finishButton.addEventListener("click", () => {
+          if(completionBanner) {
+            completionBanner.textContent = "審核已完成。這批資料可以進入新人連動流程。";
+            completionBanner.classList.add("is-visible");
+          }
+        });
+      }
+
+      if (downloadFileBtn) {
+        downloadFileBtn.addEventListener("click", () => {
+          const fileName = downloadFileBtn.dataset.filename;
+          const fileUrl = downloadFileBtn.dataset.url;
+          
+          // 模擬下載行為，實務上這裡會是打 API 或是觸發瀏覽器下載
+          alert(`即將下載檔案：${fileName}\n(此為模擬功能，實務上需套用真實下載連結)`);
+          
+          // 若有真實 URL，可使用這段觸發下載
+          // if (fileUrl && fileUrl !== '#') {
+          //   const a = document.createElement('a');
+          //   a.href = fileUrl;
+          //   a.download = fileName;
+          //   document.body.appendChild(a);
+          //   a.click();
+          //   document.body.removeChild(a);
+          // }
+        });
+      }
+
+      renderPage();
+    });
+  </script>
+</body>
+</html>
