@@ -3,12 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>接續 - 指派新人</title>
-  <link rel="stylesheet" href="./globals.css">
+  <title>無痛交接 - 指派新人</title>
+  <link rel="stylesheet" href="./orchard-system.css">
   <style>
+    :root {
+      --ink: var(--orchard-ink);
+      --muted: var(--orchard-ink-soft);
+      --line: var(--orchard-line);
+      --paper: var(--orchard-paper);
+      --canvas: var(--orchard-canvas);
+      --sage: var(--orchard-green);
+      --sage-dark: var(--orchard-green-dark);
+      --sage-soft: var(--orchard-green-soft);
+      --sand: var(--orchard-honey-soft);
+      --blue-soft: var(--orchard-info-soft);
+      --danger: var(--orchard-danger);
+      --danger-soft: var(--orchard-danger-soft);
+      --warning: #805509;
+      --warning-soft: var(--orchard-honey-soft);
+      --shadow: var(--orchard-shadow-md);
+    }
+
     .newcomer-shell {
       min-height: 100vh;
-      background: var(--canvas);
+      background:
+        radial-gradient(circle at 88% 4%, rgb(184 207 104 / 22%), transparent 28rem),
+        linear-gradient(145deg, #faf7e9, var(--orchard-canvas));
     }
 
     .newcomer-shell .workspace {
@@ -26,6 +46,38 @@
 
     .newcomer-shell .topbar h1 {
       font-size: 24px;
+    }
+
+    .newcomer-shell .topbar .score-pill {
+      color: var(--orchard-green-dark);
+    }
+
+    .newcomer-shell .topbar {
+      border-color: rgb(113 123 62 / 16%);
+      background: rgb(255 252 235 / 86%);
+      box-shadow: 0 7px 24px rgb(85 91 46 / 5%);
+    }
+
+    .newcomer-shell .primary-button {
+      border-color: #e7a02e;
+      color: #4d3d17;
+      background: linear-gradient(145deg, #ffc75b, #eea431);
+      box-shadow: 0 9px 22px rgb(127 87 14 / 18%);
+    }
+
+    .newcomer-shell .primary-button:hover {
+      background: #ffd170;
+      border-color: #e0a03b;
+    }
+
+    .newcomer-shell .ghost-button {
+      border-color: var(--orchard-line-strong);
+      color: var(--orchard-green-dark);
+      background: rgb(255 253 242 / 88%);
+    }
+
+    .newcomer-shell .ghost-button:hover {
+      background: #fff5c9;
     }
 
     .topbar-note {
@@ -285,8 +337,9 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="./orchard-page-compat.css">
 </head>
-<body>
+<body class="orchard-app">
   <div class="newcomer-shell">
     <main class="workspace">
       <header class="topbar">
@@ -332,8 +385,8 @@
                 </div>
 
                 <div class="form-field">
-                  <label for="newcomerEmail">新人信箱</label>
-                  <input id="newcomerEmail" type="email" placeholder="輸入新人信箱">
+                  <label for="newcomerId">新人 ID</label>
+                  <input id="newcomerId" type="text" placeholder="輸入新人 ID">
                 </div>
 
                 <div class="form-field">
@@ -376,7 +429,7 @@
     const linkStatus = document.querySelector("#linkStatus");
     const formStatus = document.querySelector("#formStatus");
     const newcomerName = document.querySelector("#newcomerName");
-    const newcomerEmail = document.querySelector("#newcomerEmail");
+    const newcomerId = document.querySelector("#newcomerId");
     const newcomerTitle = document.querySelector("#newcomerTitle");
     const startDate = document.querySelector("#startDate");
     const supervisorNote = document.querySelector("#supervisorNote");
@@ -396,7 +449,7 @@
     function formComplete() {
       return Boolean(
         newcomerName.value.trim() &&
-        newcomerEmail.value.trim() &&
+        newcomerId.value.trim() &&
         newcomerTitle.value.trim() &&
         startDate.value.trim() &&
         supervisorNote.value.trim()
@@ -404,7 +457,7 @@
     }
 
     function getFormProgress() {
-      const fields = [newcomerName, newcomerEmail, newcomerTitle, startDate, supervisorNote];
+      const fields = [newcomerName, newcomerId, newcomerTitle, startDate, supervisorNote];
       const completedFields = fields.filter((field) => field.value.trim()).length;
       return Math.round((completedFields / fields.length) * 100);
     }
@@ -426,14 +479,14 @@
       assignBtn.disabled = !done || !ready;
     }
 
-    [newcomerName, newcomerEmail, newcomerTitle, startDate, supervisorNote].forEach((field) => {
+    [newcomerName, newcomerId, newcomerTitle, startDate, supervisorNote].forEach((field) => {
       field.addEventListener("input", renderPage);
     });
 
     assignBtn.addEventListener("click", () => {
       assignedNewcomers.push({
         name: newcomerName.value.trim(),
-        email: newcomerEmail.value.trim(),
+        newcomerId: newcomerId.value.trim(),
         title: newcomerTitle.value.trim(),
         startDate: startDate.value,
         note: supervisorNote.value.trim()
@@ -444,7 +497,7 @@
 
     resetBtn.addEventListener("click", () => {
       newcomerName.value = "";
-      newcomerEmail.value = "";
+      newcomerId.value = "";
       newcomerTitle.value = "";
       startDate.value = "";
       supervisorNote.value = "";
