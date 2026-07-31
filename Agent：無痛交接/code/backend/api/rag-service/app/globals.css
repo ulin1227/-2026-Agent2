@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../frontend/styles/assist-chat.css";
 
 :root {
   --ink: #24332d;

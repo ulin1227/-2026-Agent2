@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SiteSidebar, type SiteSection } from "../components/site-sidebar";
 
 const placeholders = {
@@ -27,6 +27,7 @@ type PlaceholderKey = keyof typeof placeholders;
 
 export default async function PlaceholderPage({ params }: { params: Promise<{ module: string }> }) {
   const { module: moduleKey } = await params;
+  if (moduleKey === "assistant") redirect("/chat");
   if (!(moduleKey in placeholders)) notFound();
   const item = placeholders[moduleKey as PlaceholderKey];
   const active = moduleKey as SiteSection;
