@@ -1,0 +1,1 @@
+CREATE INDEX `idx_source_references_case_entity` ON `source_references` (`case_id`,`entity_type`,`entity_id`);
