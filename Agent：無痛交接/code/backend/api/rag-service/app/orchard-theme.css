@@ -1,0 +1,393 @@
+/*
+ * Orchard system theme
+ * Loaded after globals.css so the visual layer can be removed or replaced
+ * without changing the application's structural styles.
+ */
+
+:root {
+  --ink: #473f2a;
+  --muted: #776f57;
+  --line: #e4dcc0;
+  --paper: #fffdf2;
+  --canvas: #f7f2dc;
+  --sage: #88a832;
+  --sage-dark: #5e771f;
+  --sage-soft: #edf3ce;
+  --sand: #fff0bd;
+  --blue-soft: #eef0ca;
+  --danger: #b45b45;
+  --danger-soft: #f8e5dc;
+  --warning: #d78d1e;
+  --warning-soft: #fff0ca;
+  --shadow: 0 18px 44px rgb(79 96 30 / 13%);
+}
+
+body {
+  background:
+    radial-gradient(circle at 85% 8%, rgb(255 245 188 / 55%), transparent 25rem),
+    var(--canvas);
+  color: var(--ink);
+}
+
+::selection {
+  color: #493b19;
+  background: #f7cb6b;
+}
+
+/* Shared navigation */
+.sidebar,
+.site-nav-sidebar {
+  border-color: rgb(104 123 43 / 16%);
+  background:
+    radial-gradient(circle at 16% 3%, rgb(255 255 255 / 72%), transparent 11rem),
+    linear-gradient(168deg, #eff5d4 0%, #e2edb6 28%, #d3e399 61%, #bfd572 100%);
+  box-shadow:
+    inset -1px 0 0 rgb(255 255 255 / 42%),
+    9px 0 30px rgb(66 82 22 / 7%);
+}
+
+.brand-row,
+.package-block,
+.sidebar-footer,
+.sidebar-chat-wrap {
+  border-color: rgb(79 94 27 / 18%);
+}
+
+.brand-icon-slot,
+.brand-mark {
+  color: #514019;
+  background: linear-gradient(145deg, #ffc85b, #eca42e);
+  box-shadow: 0 9px 22px rgb(112 76 12 / 20%);
+}
+
+.brand-copy small,
+.section-label,
+.package-block > p,
+.sidebar-footer small {
+  color: rgb(58 66 25 / 68%);
+}
+
+.main-nav button,
+.main-nav a {
+  color: rgb(59 68 26 / 78%);
+}
+
+.main-nav button:hover,
+.main-nav button.is-active,
+.main-nav a:hover,
+.main-nav a.is-active {
+  color: #4d5f16;
+  background: rgb(255 253 236 / 78%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 65%),
+    0 7px 18px rgb(70 84 24 / 8%);
+}
+
+.file-item {
+  background: rgb(255 253 238 / 50%);
+}
+
+.file-item:hover {
+  border-color: rgb(93 113 33 / 20%);
+  background: #fffbea;
+}
+
+.file-icon {
+  border-color: #ded29e;
+  color: #6f7f24;
+  background: #fffbed;
+}
+
+.sidebar-toggle,
+.agent-panel-toggle {
+  border-color: rgb(83 100 27 / 22%);
+  color: #5e731f;
+  background: rgb(255 253 237 / 72%);
+}
+
+.sidebar-toggle:hover,
+.agent-panel-toggle:hover {
+  border-color: #92a94d;
+  background: #fff8d7;
+}
+
+.sidebar-chat-fab,
+.agent-input button {
+  color: #493915;
+  background: linear-gradient(145deg, #ffc75a, #efa52e);
+  box-shadow: 0 12px 28px rgb(117 80 14 / 22%);
+}
+
+.sidebar-chat-fab:hover,
+.sidebar-chat-fab.is-active,
+.agent-input button:hover {
+  background: #ffc866;
+}
+
+/* Main workspace */
+.app-shell,
+.site-portal-shell {
+  background: var(--canvas);
+}
+
+.workspace {
+  background:
+    radial-gradient(circle at 91% 8%, rgb(184 207 104 / 22%), transparent 28rem),
+    linear-gradient(145deg, #faf7e9, #f4efd8);
+}
+
+.topbar {
+  border-color: rgb(113 123 62 / 16%);
+  background: rgb(255 252 235 / 86%);
+  box-shadow: 0 7px 24px rgb(85 91 46 / 5%);
+}
+
+.primary-button {
+  border-color: #e7a02e;
+  color: #4d3d17;
+  background: linear-gradient(145deg, #ffc75b, #eea431);
+  box-shadow: 0 9px 22px rgb(127 87 14 / 18%);
+}
+
+.primary-button:hover {
+  border-color: #e0a03b;
+  color: #453511;
+  background: #ffd170;
+  box-shadow: 0 12px 26px rgb(127 87 14 / 22%);
+}
+
+.ghost-button,
+.download-button,
+.placeholder-back {
+  border-color: #d9d0aa;
+  color: var(--sage-dark);
+  background: rgb(255 253 242 / 84%);
+}
+
+.ghost-button:hover,
+.download-button:hover,
+.placeholder-back:hover {
+  background: #fff5c9;
+}
+
+.overview-card,
+.upload-card {
+  border-color: #e5d9ad;
+  background:
+    radial-gradient(circle at 88% 15%, rgb(255 211 104 / 26%), transparent 13rem),
+    linear-gradient(130deg, #fffdf2 0%, #fff5d2 60%, #eef2cb 100%);
+  box-shadow: var(--shadow);
+}
+
+.overview-card::after {
+  border-color: rgb(133 161 45 / 20%);
+  box-shadow:
+    0 0 0 34px rgb(135 166 48 / 4.5%),
+    0 0 0 68px rgb(135 166 48 / 2.5%);
+}
+
+.upload-drop {
+  border-color: #d9cfaa;
+  background: rgb(255 253 240 / 75%);
+}
+
+.upload-drop:hover {
+  border-color: #9bb54d;
+  background: #fffef5;
+}
+
+.upload-symbol,
+.module-icon,
+.assistant-arrow,
+.placeholder-node,
+.tiny-icon.check {
+  color: var(--sage-dark);
+  background: linear-gradient(145deg, #f0f4d5, #e4edbb);
+}
+
+/* Maps, panels and data surfaces */
+.map-panel,
+.spec-page,
+.pipeline-page,
+.selected-summary,
+.criterion-card,
+.source-chip,
+.pipeline-list article {
+  border-color: var(--line);
+  background: rgb(255 253 244 / 94%);
+  box-shadow: 0 10px 30px rgb(79 91 34 / 5.5%);
+}
+
+.mindmap-diagram {
+  --map-line: #cbd59a;
+  background-color: #fffdf4;
+  background-image: radial-gradient(#d9dfb7 0.7px, transparent 0.7px);
+}
+
+.diagram-center {
+  color: #fffceb;
+  background: linear-gradient(145deg, #91ae36, #6f8d24);
+  box-shadow: 0 18px 38px rgb(87 109 28 / 25%);
+}
+
+.diagram-branch-node,
+.diagram-leaf {
+  border-color: #e2ddc2;
+  background: rgb(255 253 242 / 97%);
+  box-shadow: 0 9px 24px rgb(75 88 31 / 6.5%);
+}
+
+.diagram-branch-node.is-selected,
+.diagram-leaf:hover,
+.diagram-leaf.is-related {
+  border-color: #98b14a;
+  background: #fbfce9;
+}
+
+.agent-panel,
+.agent-input {
+  border-color: var(--line);
+  background: #fbf8e9;
+}
+
+.agent-avatar {
+  background: #edf2ce;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 70%);
+}
+
+.schema-card {
+  color: #fffbe9;
+  background: linear-gradient(145deg, #4f641d, #354712);
+}
+
+/* Welcome dashboard */
+.welcome-page {
+  background:
+    radial-gradient(circle at 86% 12%, rgb(255 246 190 / 55%), transparent 20rem),
+    radial-gradient(circle at 12% 92%, rgb(238 245 201 / 28%), transparent 24rem),
+    linear-gradient(145deg, #b7ce65 0%, #a8c255 55%, #9fb94b 100%);
+}
+
+.welcome-header {
+  border-color: rgb(255 255 255 / 30%);
+}
+
+.welcome-brand,
+.welcome-intro h1,
+.welcome-question h2 {
+  color: #fffdf0;
+}
+
+.welcome-brand > span:last-child small,
+.welcome-intro p {
+  color: rgb(255 255 255 / 82%);
+}
+
+.welcome-role {
+  border-color: rgb(255 255 255 / 55%);
+  color: #5b711f;
+  background: rgb(255 253 236 / 78%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 60%);
+}
+
+.welcome-question .eyebrow {
+  color: #fff2b2;
+}
+
+.question-line {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 48%));
+}
+
+.question-line:last-child {
+  background: linear-gradient(90deg, rgb(255 255 255 / 48%), transparent);
+}
+
+.module-card,
+.assistant-entry {
+  border-color: rgb(93 108 39 / 18%);
+  background:
+    radial-gradient(circle at 105% 105%, rgb(241 179 53 / 10%), transparent 9rem),
+    rgb(255 253 240 / 94%);
+  box-shadow: 0 13px 34px rgb(65 80 20 / 11%);
+  backdrop-filter: blur(9px);
+}
+
+.module-card.is-available {
+  border-color: rgb(100 123 35 / 26%);
+  background: linear-gradient(145deg, #fffef4 8%, #fff3c8 100%);
+}
+
+.module-card::after {
+  border-color: rgb(127 153 43 / 16%);
+  box-shadow: 0 0 0 20px rgb(127 153 43 / 3.5%);
+}
+
+.module-card:hover,
+.assistant-entry:hover {
+  border-color: rgb(91 116 28 / 42%);
+  box-shadow: 0 18px 42px rgb(65 80 20 / 17%);
+}
+
+.module-status {
+  color: #7a7050;
+  background: #f6efd9;
+}
+
+.is-available .module-status {
+  color: #5c731d;
+  background: #eaf1c6;
+}
+
+.module-number {
+  color: #b1a371;
+}
+
+.module-action i {
+  border-color: #dad2ad;
+  background: rgb(255 255 255 / 72%);
+}
+
+.assistant-symbol {
+  color: #4c3c18;
+  background: linear-gradient(145deg, #ffc860, #eca52f);
+  box-shadow: 0 9px 22px rgb(117 79 12 / 20%);
+}
+
+.choice-divider span {
+  background: rgb(255 255 255 / 42%);
+}
+
+.choice-divider b,
+.welcome-footnote {
+  color: rgb(255 255 255 / 78%);
+}
+
+.welcome-orbit {
+  border-color: rgb(255 255 255 / 18%);
+  box-shadow:
+    0 0 0 36px rgb(255 255 255 / 2.5%),
+    0 0 0 72px rgb(255 255 255 / 1.8%);
+}
+
+/* Reserved module pages */
+.placeholder-page {
+  background:
+    radial-gradient(circle at 82% 16%, rgb(255 218 126 / 30%), transparent 28%),
+    linear-gradient(145deg, #f8f3dc, #eef2d0);
+}
+
+.placeholder-card {
+  border-color: #e3d9b7;
+  background: rgb(255 253 241 / 95%);
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 760px) {
+  .site-nav-sidebar,
+  .site-portal-shell > .site-nav-sidebar {
+    border-color: rgb(104 123 43 / 16%);
+    background:
+      radial-gradient(circle at 8% 0%, rgb(255 255 255 / 70%), transparent 11rem),
+      linear-gradient(105deg, rgb(239 245 212 / 98%), rgb(206 225 141 / 98%));
+  }
+}
