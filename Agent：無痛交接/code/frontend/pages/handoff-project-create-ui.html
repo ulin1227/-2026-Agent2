@@ -3,12 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>接續 - 建立交接專案</title>
-  <link rel="stylesheet" href="./globals.css">
+  <title>無痛交接 - 建立交接專案</title>
+  <link rel="stylesheet" href="./orchard-system.css">
   <style>
+    :root {
+      --ink: var(--orchard-ink);
+      --muted: var(--orchard-ink-soft);
+      --line: var(--orchard-line);
+      --paper: var(--orchard-paper);
+      --canvas: var(--orchard-canvas);
+      --sage: var(--orchard-green);
+      --sage-dark: var(--orchard-green-dark);
+      --sage-soft: var(--orchard-green-soft);
+      --sand: var(--orchard-honey-soft);
+      --blue-soft: var(--orchard-info-soft);
+      --danger: var(--orchard-danger);
+      --danger-soft: var(--orchard-danger-soft);
+      --warning: #805509;
+      --warning-soft: var(--orchard-honey-soft);
+      --shadow: var(--orchard-shadow-md);
+    }
+
     .project-create-shell {
       min-height: 100vh;
-      background: var(--canvas);
+      background:
+        radial-gradient(circle at 88% 4%, rgb(184 207 104 / 22%), transparent 28rem),
+        linear-gradient(145deg, #faf7e9, var(--orchard-canvas));
     }
 
     .project-create-shell .workspace {
@@ -26,6 +46,34 @@
 
     .project-create-shell .topbar h1 {
       font-size: 24px;
+    }
+
+    .project-create-shell .topbar {
+      border-color: rgb(113 123 62 / 16%);
+      background: rgb(255 252 235 / 86%);
+      box-shadow: 0 7px 24px rgb(85 91 46 / 5%);
+    }
+
+    .project-create-shell .primary-button {
+      border-color: #e7a02e;
+      color: #4d3d17;
+      background: linear-gradient(145deg, #ffc75b, #eea431);
+      box-shadow: 0 9px 22px rgb(127 87 14 / 18%);
+    }
+
+    .project-create-shell .primary-button:hover {
+      background: #ffd170;
+      border-color: #e0a03b;
+    }
+
+    .project-create-shell .ghost-button {
+      border-color: var(--orchard-line-strong);
+      color: var(--orchard-green-dark);
+      background: rgb(255 253 242 / 88%);
+    }
+
+    .project-create-shell .ghost-button:hover {
+      background: #fff5c9;
     }
 
     .topbar-note {
@@ -266,21 +314,12 @@
       background: #fbfcf9;
     }
 
-    .role-name-input {
+    .role-name-label {
       min-width: 0;
-      border: 1px solid transparent;
-      border-radius: 9px;
-      background: transparent;
       color: var(--ink);
       font: 700 13px/1.4 "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
-      padding: 7px 8px;
-    }
-
-    .role-name-input:focus {
-      outline: 0;
-      border-color: #cfd9d1;
-      background: #fff;
-      box-shadow: 0 0 0 3px rgba(86, 119, 102, 0.08);
+      margin: 0;
+      padding: 7px 0;
     }
 
     .role-actions {
@@ -485,8 +524,9 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="./orchard-page-compat.css">
 </head>
-<body>
+<body class="orchard-app">
   <div class="project-create-shell">
     <main class="workspace">
       <header class="topbar">
@@ -541,7 +581,7 @@
               </div>
 
               <div class="hint-box">
-                至少指定 1 位主管與 1 位離職同事。</br>協作同事可視情況加入，用來補充文件或共同確認交接內容。
+                至少指定 1 位主管與 1 位離職夥伴。</br>協作夥伴可視情況加入，用來補充文件或共同確認交接內容。
               </div>
             </div>
           </article>
@@ -549,7 +589,7 @@
           <article class="map-panel setup-panel">
             <div class="setup-panel-header">
               <div>
-                <div class="eyebrow">ROLE GROUPS</div>
+                <div class="eyebrow">MEMBER ASSIGNMENT</div>
                 <h2>成員指派</h2>
               </div>
               <span class="status-pill status-warning" id="memberStatus">尚未指派</span>
@@ -594,21 +634,21 @@
     let currentMode = "fast";
     let roleGroups = [
       { id: crypto.randomUUID(), name: "主管", members: [] },
-      { id: crypto.randomUUID(), name: "離職同事", members: [] },
-      { id: crypto.randomUUID(), name: "協作同事", members: [] }
+      { id: crypto.randomUUID(), name: "離職夥伴", members: [] },
+      { id: crypto.randomUUID(), name: "協作夥伴", members: [] }
     ];
 
     // 模擬當前操作者的資料 (實務上可從登入狀態獲取)
     const currentUser = {
-      name: "陳大明",
-      email: "ming.cheng@example.com"
+      name: "尚大強",
+      employeeId: "24601"
     };
 
     function createMember() {
       return {
         id: crypto.randomUUID(),
         name: "",
-        email: ""
+        employeeId: ""
       };
     }
 
@@ -622,14 +662,14 @@
     }
 
     function getValidMembers() {
-      return getMembers().filter((member) => member.name.trim() && member.email.trim());
+      return getMembers().filter((member) => member.name.trim() && member.employeeId.trim());
     }
 
     function hasRequiredRoles() {
       const supervisor = roleGroups.find((group) => group.name.trim() === "主管");
-      const departing = roleGroups.find((group) => group.name.trim() === "離職同事");
-      const supervisorOk = supervisor && supervisor.members.some((member) => member.name.trim() && member.email.trim());
-      const departingOk = departing && departing.members.some((member) => member.name.trim() && member.email.trim());
+      const departing = roleGroups.find((group) => group.name.trim() === "離職夥伴");
+      const supervisorOk = supervisor && supervisor.members.some((member) => member.name.trim() && member.employeeId.trim());
+      const departingOk = departing && departing.members.some((member) => member.name.trim() && member.employeeId.trim());
       return Boolean(supervisorOk && departingOk);
     }
 
@@ -663,7 +703,7 @@
       roleList.innerHTML = "";
 
       const isCurrentUserAssigned = roleGroups.some(group => 
-        group.members.some(member => member.email === currentUser.email)
+        group.members.some(member => member.employeeId === currentUser.employeeId)
       );
 
       roleGroups.forEach((group) => {
@@ -675,21 +715,21 @@
           ? group.members.map((member) => `
             <div class="member-row" data-member-id="${member.id}">
               <input class="member-name" type="text" placeholder="成員姓名" value="${member.name}">
-              <input class="member-email" type="email" placeholder="成員信箱" value="${member.email}">
+              <input class="member-employee-id" type="text" placeholder="成員 ID" value="${member.employeeId}">
               <button class="member-remove" type="button">移除</button>
             </div>
           `).join("")
           : `<div class="empty-members">目前尚未加入成員。</div>`;
 
         let setMyselfBtnHTML = "";
-        if (group.name === "主管" || group.name === "離職同事") {
+        if (group.name === "主管" || group.name === "離職夥伴") {
           const disabledAttr = isCurrentUserAssigned ? "disabled" : "";
           setMyselfBtnHTML = `<button class="set-myself" type="button" ${disabledAttr}>設為本人</button>`;
         }
 
         roleCard.innerHTML = `
           <div class="role-card-header">
-            <input class="role-name-input" type="text" value="${group.name}" aria-label="身分組名稱">
+            <p class="role-name-label">${group.name}</p>
             <div class="role-actions">
               ${setMyselfBtnHTML}
               <button class="add-member" type="button">加入成員</button>
@@ -734,13 +774,13 @@
       }
 
       if (event.target.classList.contains("set-myself")) {
-        const alreadyExists = group.members.some(m => m.email === currentUser.email);
+        const alreadyExists = group.members.some(m => m.employeeId === currentUser.employeeId);
         
         if (!alreadyExists) {
            group.members.push({
             id: crypto.randomUUID(),
             name: currentUser.name,
-            email: currentUser.email
+            employeeId: currentUser.employeeId
           });
           renderRoles();
         }
@@ -760,18 +800,14 @@
       const group = findGroup(roleCard.dataset.groupId);
       if (!group) return;
 
-      if (event.target.classList.contains("role-name-input")) {
-        group.name = event.target.value;
-      }
-
       const memberRow = event.target.closest(".member-row");
       if (memberRow) {
         const member = group.members.find((item) => item.id === memberRow.dataset.memberId);
         if (member && event.target.classList.contains("member-name")) {
           member.name = event.target.value;
         }
-        if (member && event.target.classList.contains("member-email")) {
-          member.email = event.target.value;
+        if (member && event.target.classList.contains("member-employee-id")) {
+          member.employeeId = event.target.value;
         }
       }
 
@@ -786,8 +822,8 @@
       modeButtons.forEach((item) => item.classList.toggle("is-active", item.dataset.mode === "fast"));
       roleGroups = [
         { id: crypto.randomUUID(), name: "主管", members: [] },
-        { id: crypto.randomUUID(), name: "離職同事", members: [] },
-        { id: crypto.randomUUID(), name: "協作同事", members: [] }
+        { id: crypto.randomUUID(), name: "離職夥伴", members: [] },
+        { id: crypto.randomUUID(), name: "協作夥伴", members: [] }
       ];
       renderRoles();
     });
