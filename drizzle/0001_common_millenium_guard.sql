@@ -1,0 +1,1 @@
+ALTER TABLE `generation_runs` ADD `overwrite_strategy` text DEFAULT 'replace_generated_only' NOT NULL;
