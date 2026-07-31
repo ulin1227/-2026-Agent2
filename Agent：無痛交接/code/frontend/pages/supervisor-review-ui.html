@@ -3,12 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>接續 - 主管審核</title>
-  <link rel="stylesheet" href="./globals.css">
+  <title>無痛交接 - 主管審核</title>
+  <link rel="stylesheet" href="./orchard-system.css">
   <style>
+    :root {
+      --ink: var(--orchard-ink);
+      --muted: var(--orchard-ink-soft);
+      --line: var(--orchard-line);
+      --paper: var(--orchard-paper);
+      --canvas: var(--orchard-canvas);
+      --sage: var(--orchard-green);
+      --sage-dark: var(--orchard-green-dark);
+      --sage-soft: var(--orchard-green-soft);
+      --sand: var(--orchard-honey-soft);
+      --blue-soft: var(--orchard-info-soft);
+      --danger: var(--orchard-danger);
+      --danger-soft: var(--orchard-danger-soft);
+      --warning: #805509;
+      --warning-soft: var(--orchard-honey-soft);
+      --shadow: var(--orchard-shadow-md);
+    }
+
     .review-shell {
       min-height: 100vh;
-      background: var(--canvas);
+      background:
+        radial-gradient(circle at 88% 4%, rgb(184 207 104 / 22%), transparent 28rem),
+        linear-gradient(145deg, #faf7e9, var(--orchard-canvas));
     }
 
     .review-shell .workspace {
@@ -26,6 +46,38 @@
 
     .review-shell .topbar h1 {
       font-size: 24px;
+    }
+
+    .review-shell .topbar .score-pill {
+      color: var(--orchard-green-dark);
+    }
+
+    .review-shell .topbar {
+      border-color: rgb(113 123 62 / 16%);
+      background: rgb(255 252 235 / 86%);
+      box-shadow: 0 7px 24px rgb(85 91 46 / 5%);
+    }
+
+    .review-shell .primary-button {
+      border-color: #e7a02e;
+      color: #4d3d17;
+      background: linear-gradient(145deg, #ffc75b, #eea431);
+      box-shadow: 0 9px 22px rgb(127 87 14 / 18%);
+    }
+
+    .review-shell .primary-button:hover {
+      background: #ffd170;
+      border-color: #e0a03b;
+    }
+
+    .review-shell .ghost-button {
+      border-color: var(--orchard-line-strong);
+      color: var(--orchard-green-dark);
+      background: rgb(255 253 242 / 88%);
+    }
+
+    .review-shell .ghost-button:hover {
+      background: #fff5c9;
     }
 
     .review-actions {
@@ -54,7 +106,7 @@
       justify-content: space-between;
       gap: 18px;
       margin-bottom: 16px;
-      background: #fff;
+      background: transparent;
       text-align: left;
     }
 
@@ -266,7 +318,7 @@
 
     .review-item-main span {
       margin-top: 3px;
-      color: var(--muted);
+      color: var(--orchard-ink-soft);
       font-size: 11px;
       line-height: 1.5;
     }
@@ -333,7 +385,7 @@
 
     .detail-title-row p {
       margin: 5px 0 0;
-      color: var(--muted);
+      color: var(--orchard-ink-soft);
       font-size: 12px;
       line-height: 1.7;
       white-space: nowrap;
@@ -346,14 +398,14 @@
       align-items: center;
       justify-content: center;
       line-height: 1;
-      background: var(--sage-soft);
+      background: #fff;
       color: var(--sage-dark);
-      border-color: transparent;
+      border-color: var(--orchard-line-strong);
     }
 
     #downloadFileBtn:hover {
-      background: #dce5df;
-      border-color: transparent;
+      background: #fff5c9;
+      border-color: var(--orchard-line-strong);
     }
 
     .file-preview {
@@ -393,7 +445,7 @@
 
     .file-preview-head span {
       margin-top: 3px;
-      color: var(--muted);
+      color: var(--orchard-ink-soft);
       font-size: 10px;
       white-space: nowrap;
       overflow: hidden;
@@ -403,6 +455,38 @@
     .preview-body {
       min-height: 210px;
       padding: 18px;
+    }
+
+    .preview-content {
+      min-height: 210px;
+      max-height: 360px;
+      margin: 0;
+      overflow: auto;
+      color: var(--orchard-ink);
+      font-size: 12px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .preview-content.is-muted {
+      color: var(--orchard-ink-soft);
+    }
+
+    .pdf-preview-frame {
+      display: none;
+      width: 100%;
+      min-height: 520px;
+      border: 0;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .file-preview.is-pdf .preview-content {
+      display: none;
+    }
+
+    .file-preview.is-pdf .pdf-preview-frame {
+      display: block;
     }
 
     .preview-line {
@@ -602,8 +686,9 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="./orchard-page-compat.css">
 </head>
-<body>
+<body class="orchard-app">
   <div class="review-shell">
     <main class="workspace">
       <header class="topbar">
@@ -689,14 +774,8 @@
                   </div>
                 </div>
                 <div class="preview-body">
-                  <div class="preview-line"></div>
-                  <div class="preview-line"></div>
-                  <div class="preview-line"></div>
-                  <div class="preview-line"></div>
-                  <div class="preview-line"></div>
-                  <div class="preview-line"></div>
-                  <div class="preview-line"></div>
-                  <div class="preview-line"></div>
+                  <pre class="preview-content is-muted" id="previewText">選擇左側待審項目後，這裡會顯示文件內容。</pre>
+                  <iframe class="pdf-preview-frame" id="pdfPreviewFrame" title="PDF 文件預覽"></iframe>
                 </div>
               </div>
 
@@ -740,66 +819,90 @@
             id: "f1", 
             mappedTitle: "B1 工作內容",
             fileDescription: "知道主要負責什麼、預期產出是什麼",
-            fileName: "目前負責事項與優先順序.pdf", 
-            fileSize: "1.8 MB"
+            fileName: "01_業務內容交接_Project_ORBIT.docx", 
+            previewFileName: "01_業務內容交接_Project_ORBIT.docx",
+            fileUrl: "./01_業務內容交接_Project_ORBIT.docx",
+            fileSize: "41 KB"
           },
           { 
             id: "f2", 
             mappedTitle: "B2 接手行動",
             fileDescription: "知道目前進度、接手後第一步、重要期限",
-            fileName: "未完成事項_待辦與下一步.docx", 
-            fileSize: "642 KB"
+            fileName: "01_業務內容交接_Project_ORBIT.docx", 
+            previewFileName: "01_業務內容交接_Project_ORBIT.docx",
+            fileUrl: "./01_業務內容交接_Project_ORBIT.docx",
+            fileSize: "41 KB"
           },
           { 
             id: "f3", 
             mappedTitle: "P1 關鍵人物",
             fileDescription: "知道主要內外部窗口是誰、各自負責什麼",
-            fileName: "重要聯絡人與權限.pdf", 
-            fileSize: "512 KB"
+            fileName: "02_人際關係交接_Project_ORBIT.docx", 
+            previewFileName: "02_人際關係交接_Project_ORBIT.docx",
+            fileUrl: "./02_人際關係交接_Project_ORBIT.docx",
+            fileSize: "41 KB"
           },
           { 
             id: "f4", 
             mappedTitle: "P2 聯絡時機",
             fileDescription: "知道什麼事情階段應該找誰",
-            fileName: "重要聯絡人與權限.pdf", 
-            fileSize: "412 KB"
+            fileName: "02_人際關係交接_Project_ORBIT.docx", 
+            previewFileName: "02_人際關係交接_Project_ORBIT.docx",
+            fileUrl: "./02_人際關係交接_Project_ORBIT.docx",
+            fileSize: "41 KB"
           },
           { 
             id: "f5", 
             mappedTitle: "A1 必要資源",
             fileDescription: "知道工作需要哪些系統、文件或設備",
-            fileName: "固定流程或 SOP.docx", 
-            fileSize: "642 KB"
+            fileName: "03_公司資產交接_Project_ORBIT.docx", 
+            previewFileName: "03_公司資產交接_Project_ORBIT.docx",
+            fileUrl: "./03_公司資產交接_Project_ORBIT.docx",
+            fileSize: "41 KB"
           },
           { 
             id: "f6", 
             mappedTitle: "A2 取得方式",
             fileDescription: "知道資源在哪裡,以及如何取得權限",
-            fileName: "固定流程或 SOP.docx", 
-            fileSize: "338 KB"
+            fileName: "03_公司資產交接_Project_ORBIT.docx", 
+            previewFileName: "03_公司資產交接_Project_ORBIT.docx",
+            fileUrl: "./03_公司資產交接_Project_ORBIT.docx",
+            fileSize: "41 KB"
           },
           { 
             id: "f7", 
             mappedTitle: "其他補充資料",
             fileDescription: "離職同事額外提供的補充檔案。",
-            fileName: "重要聯絡人清冊.xlsx", 
-            fileSize: "1.2 MB"
+            fileName: "PROJECT_ORBIT_supplement.pdf", 
+            previewFileName: "PROJECT_ORBIT_supplement.pdf",
+            fileUrl: "./PROJECT_ORBIT_supplement.pdf",
+            fileSize: "155 KB"
           }
         ]
       };
 
+      const fakePreviewFileName = "03_公司資產交接_Project_ORBIT.docx";
+      const fakePreviewFileUrl = `./${fakePreviewFileName}`;
       const filesArray = Array.isArray(window.reviewData.uploadedFiles) ? window.reviewData.uploadedFiles : [];
+
+      function canPreviewDocument(fileName) {
+        return /\.(pdf|docx|txt|md|csv|json|ya?ml|html|xml)$/i.test(String(fileName || ""));
+      }
 
       let reviewItems = filesArray.map((file) => {
         const isOther = file.mappedTitle === "其他";
         const safeFileName = file.fileName || "未命名檔案";
-        const fileExt = safeFileName.includes(".") ? safeFileName.split(".").pop().toUpperCase() : "FILE";
+        const previewFileName = file.previewFileName || (canPreviewDocument(safeFileName) ? safeFileName : fakePreviewFileName);
+        const previewFileUrl = file.fileUrl || `./${previewFileName}`;
+        const fileExt = previewFileName.includes(".") ? previewFileName.split(".").pop().toUpperCase() : "FILE";
         
         return {
           id: file.id,
           title: isOther ? `其他補充資料：${safeFileName}` : (file.mappedTitle || "未指定項目"),
           description: isOther ? "離職同事額外提供的補充檔案。" : (file.fileDescription || "未指定項目"),
           fileName: safeFileName,
+          previewFileName,
+          fileUrl: previewFileUrl,
           fileMeta: `${fileExt} · ${file.fileSize || "未知大小"}`,
           summary: file.summary || "請主管確認內容是否足以讓新人接手。",
           status: "pending",
@@ -821,6 +924,8 @@
       const detailFileName = document.querySelector("#detailFileName");
       const detailFileMeta = document.querySelector("#detailFileMeta");
       const previewText = document.querySelector("#previewText");
+      const pdfPreviewFrame = document.querySelector("#pdfPreviewFrame");
+      const filePreview = document.querySelector(".file-preview");
       const reviewDecision = document.querySelector("#reviewDecision");
       const reviewNote = document.querySelector("#reviewNote");
       const approveButton = document.querySelector("#approveButton");
@@ -831,6 +936,93 @@
       const downloadFileBtn = document.querySelector("#downloadFileBtn");
 
       let activeId = reviewItems.length > 0 ? reviewItems[0].id : null;
+      let previewRequestId = 0;
+      const previewCache = new Map();
+
+      function getApiBase() {
+        if (window.AGENT2_API_BASE) return window.AGENT2_API_BASE;
+        return window.location.protocol === "file:" ? "http://localhost:3000" : "";
+      }
+
+      function setPreviewText(text, muted = false) {
+        if (filePreview) filePreview.classList.remove("is-pdf");
+        if (pdfPreviewFrame) pdfPreviewFrame.removeAttribute("src");
+        if (!previewText) return;
+        previewText.textContent = text;
+        previewText.classList.toggle("is-muted", muted);
+      }
+
+      function isPdfFile(fileName) {
+        return /\.pdf$/i.test(String(fileName || ""));
+      }
+
+      function setPdfPreview(fileUrl) {
+        if (!filePreview || !pdfPreviewFrame) return;
+        if (previewText) {
+          previewText.textContent = "";
+          previewText.classList.add("is-muted");
+        }
+        filePreview.classList.add("is-pdf");
+        pdfPreviewFrame.src = fileUrl;
+      }
+
+      async function parsePreviewFile(item) {
+        const fileUrl = item.fileUrl || fakePreviewFileUrl;
+        const previewFileName = item.previewFileName || fakePreviewFileName;
+        const cacheKey = `${fileUrl}::${previewFileName}`;
+        if (previewCache.has(cacheKey)) return previewCache.get(cacheKey);
+
+        const fileResponse = await fetch(fileUrl);
+        if (!fileResponse.ok) {
+          throw new Error(`無法讀取文件 (${fileResponse.status})`);
+        }
+
+        const blob = await fileResponse.blob();
+        const file = new File([blob], previewFileName, {
+          type: blob.type || "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        });
+
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const parseResponse = await fetch(`${getApiBase()}/api/documents`, {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await parseResponse.json().catch(() => null);
+        if (!parseResponse.ok || !result?.ok) {
+          throw new Error(result?.message || result?.detail || "文件解析失敗");
+        }
+
+        const documentResult = result.documents?.[0];
+        if (!documentResult?.ok) {
+          throw new Error(documentResult?.message || "文件內容無法解析");
+        }
+
+        const parsedText = documentResult.extractedText?.trim() || "文件已解析，但沒有讀到可顯示的文字內容。";
+        previewCache.set(cacheKey, parsedText);
+        return parsedText;
+      }
+
+      async function loadDocumentPreview(item) {
+        const requestId = ++previewRequestId;
+        if (isPdfFile(item.previewFileName || item.fileName)) {
+          setPdfPreview(item.fileUrl || fakePreviewFileUrl);
+          return;
+        }
+
+        setPreviewText("文件解析中...", true);
+
+        try {
+          const parsedText = await parsePreviewFile(item);
+          if (requestId !== previewRequestId) return;
+          setPreviewText(parsedText, false);
+        } catch (error) {
+          if (requestId !== previewRequestId) return;
+          setPreviewText(`無法預覽文件：${error.message}\n\n請確認後端已啟動，並且 ${item.previewFileName || fakePreviewFileName} 位於專案資料夾。`, true);
+        }
+      }
 
       function statusText(status) {
         if (status === "approved") return "確認正確";
@@ -846,7 +1038,7 @@
 
       function renderCaseInfo() {
         if (caseNameDisplay) caseNameDisplay.textContent = window.reviewData.projectTitle || "未知專案";
-        if (caseModeDisplay) caseModeDisplay.textContent = `交接期模式：${window.reviewData.modeTitle || ""}`;
+        if (caseModeDisplay) caseModeDisplay.textContent = `交接模式：${window.reviewData.modeTitle || ""}`;
         
         const casePriorityDisplay = document.querySelector("#casePriorityDisplay");
         if (casePriorityDisplay) casePriorityDisplay.textContent = window.reviewData.modePriority || "";
@@ -936,7 +1128,7 @@
           if(detailDescription) detailDescription.textContent = "目前沒有可預覽的檔案。";
           if(detailFileName) detailFileName.textContent = "-";
           if(detailFileMeta) detailFileMeta.textContent = "-";
-          if(previewText) previewText.textContent = "-";
+          setPreviewText("-", true);
           if(downloadFileBtn) downloadFileBtn.style.display = "none";
           return;
         }
@@ -945,11 +1137,11 @@
         
         detailTitle.textContent = activeItem.title;
         if(detailDescription) detailDescription.textContent = activeItem.description;
-        if(detailFileName) detailFileName.textContent = activeItem.fileName;
+        if(detailFileName) detailFileName.textContent = activeItem.previewFileName || activeItem.fileName;
         if(detailFileMeta) detailFileMeta.textContent = activeItem.fileMeta;
-        if(previewText) previewText.textContent = activeItem.summary;
         if(reviewDecision) reviewDecision.value = activeItem.status;
         if(reviewNote) reviewNote.value = activeItem.note;
+        loadDocumentPreview(activeItem);
         
         if(detailStatus) {
           detailStatus.textContent = statusText(activeItem.status);
@@ -958,8 +1150,8 @@
 
         if(downloadFileBtn) {
           downloadFileBtn.style.display = "inline-flex";
-          downloadFileBtn.dataset.url = activeItem.fileUrl || "#"; 
-          downloadFileBtn.dataset.filename = activeItem.fileName;
+          downloadFileBtn.dataset.url = activeItem.fileUrl || fakePreviewFileUrl; 
+          downloadFileBtn.dataset.filename = activeItem.previewFileName || activeItem.fileName;
         }
       }
 
@@ -1034,19 +1226,14 @@
         downloadFileBtn.addEventListener("click", () => {
           const fileName = downloadFileBtn.dataset.filename;
           const fileUrl = downloadFileBtn.dataset.url;
-          
-          // 模擬下載行為，實務上這裡會是打 API 或是觸發瀏覽器下載
-          alert(`即將下載檔案：${fileName}\n(此為模擬功能，實務上需套用真實下載連結)`);
-          
-          // 若有真實 URL，可使用這段觸發下載
-          // if (fileUrl && fileUrl !== '#') {
-          //   const a = document.createElement('a');
-          //   a.href = fileUrl;
-          //   a.download = fileName;
-          //   document.body.appendChild(a);
-          //   a.click();
-          //   document.body.removeChild(a);
-          // }
+          if (!fileUrl || fileUrl === "#") return;
+
+          const a = document.createElement("a");
+          a.href = fileUrl;
+          a.download = fileName || fakePreviewFileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
         });
       }
 
