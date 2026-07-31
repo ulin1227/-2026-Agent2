@@ -3,12 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>接續 - 資料上傳</title>
-  <link rel="stylesheet" href="./globals.css">
+  <title>無痛交接 - 資料上傳</title>
+  <link rel="stylesheet" href="./orchard-system.css">
   <style>
+    :root {
+      --ink: var(--orchard-ink);
+      --muted: var(--orchard-ink-soft);
+      --line: var(--orchard-line);
+      --paper: var(--orchard-paper);
+      --canvas: var(--orchard-canvas);
+      --sage: var(--orchard-green);
+      --sage-dark: var(--orchard-green-dark);
+      --sage-soft: var(--orchard-green-soft);
+      --sand: var(--orchard-honey-soft);
+      --blue-soft: var(--orchard-info-soft);
+      --danger: var(--orchard-danger);
+      --danger-soft: var(--orchard-danger-soft);
+      --warning: #805509;
+      --warning-soft: var(--orchard-honey-soft);
+      --shadow: var(--orchard-shadow-md);
+    }
+
     .handoff-upload-shell {
       min-height: 100vh;
-      background: var(--canvas);
+      background:
+        radial-gradient(circle at 88% 4%, rgb(184 207 104 / 22%), transparent 28rem),
+        linear-gradient(145deg, #faf7e9, var(--orchard-canvas));
     }
 
     .handoff-upload-shell .workspace {
@@ -26,6 +46,42 @@
 
     .handoff-upload-shell .topbar h1 {
       font-size: 24px;
+    }
+
+    .handoff-upload-shell .topbar .score-pill {
+      color: var(--orchard-green-dark);
+    }
+
+    .handoff-upload-shell #caseNameDisplay {
+      font-weight: 700;
+    }
+
+    .handoff-upload-shell .topbar {
+      border-color: rgb(113 123 62 / 16%);
+      background: rgb(255 252 235 / 86%);
+      box-shadow: 0 7px 24px rgb(85 91 46 / 5%);
+    }
+
+    .handoff-upload-shell .primary-button {
+      border-color: #e7a02e;
+      color: #4d3d17;
+      background: linear-gradient(145deg, #ffc75b, #eea431);
+      box-shadow: 0 9px 22px rgb(127 87 14 / 18%);
+    }
+
+    .handoff-upload-shell .primary-button:hover {
+      background: #ffd170;
+      border-color: #e0a03b;
+    }
+
+    .handoff-upload-shell .ghost-button {
+      border-color: var(--orchard-line-strong);
+      color: var(--orchard-green-dark);
+      background: rgb(255 253 242 / 88%);
+    }
+
+    .handoff-upload-shell .ghost-button:hover {
+      background: #fff5c9;
     }
 
     .topbar-note {
@@ -116,7 +172,12 @@
       transition: 180ms ease;
     }
 
-    .mode-card:hover,
+    .mode-card:hover {
+      border-color: var(--line);
+      background: #fff;
+      transform: translateY(-1px);
+    }
+
     .mode-card.is-active {
       border-color: var(--sage);
       background: var(--sage-soft);
@@ -135,7 +196,7 @@
 
     .mode-card span {
       margin-top: 6px;
-      color: var(--muted);
+      color: var(--orchard-ink-soft);
       font-size: 12px;
       line-height: 1.6;
     }
@@ -216,9 +277,7 @@
       padding: 22px;
       border: 1px dashed #b7c7bc;
       border-radius: 14px;
-      background:
-        linear-gradient(135deg, rgba(231, 238, 232, 0.72), rgba(255, 254, 251, 0.82)),
-        var(--paper);
+      background: #fff;
     }
 
     .upload-zone.is-dragover {
@@ -532,8 +591,8 @@
       padding: 0 18px;
       border: 1px solid #b8cbbd;
       border-radius: 999px;
-      background: var(--sage);
-      color: #fff;
+      background: #fff;
+      color: var(--orchard-ink);
       box-shadow: 0 14px 34px rgba(48, 65, 56, 0.22);
       font-size: 13px;
       font-weight: 800;
@@ -543,6 +602,7 @@
 
     .interview-fab:hover {
       transform: translateY(-1px);
+      background: #fff5c9;
       box-shadow: 0 18px 38px rgba(48, 65, 56, 0.25);
     }
 
@@ -552,7 +612,8 @@
       width: 22px;
       height: 22px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.18);
+      background: var(--orchard-green-soft);
+      color: var(--orchard-green-dark);
       font: 700 14px/1 Georgia, "Noto Serif TC", serif;
     }
 
@@ -584,7 +645,7 @@
 
     .interview-head h2 {
       margin: 4px 0 3px;
-      font: 500 18px/1.35 Georgia, "Noto Serif TC", serif;
+      font: 700 18px/1.35 Georgia, "Noto Serif TC", serif;
     }
 
     .interview-head p {
@@ -671,7 +732,7 @@
     }
 
     .interview-prompt small {
-      color: var(--muted);
+      color: var(--orchard-ink-soft);
       font-size: 10px;
       font-weight: 700;
       line-height: 1.4;
@@ -723,7 +784,7 @@
     }
 
     .interview-composer textarea::placeholder {
-      color: #8fa697;
+      color: var(--orchard-ink-faint);
       opacity: 0.72;
     }
 
@@ -852,8 +913,9 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="./orchard-page-compat.css">
 </head>
-<body>
+<body class="orchard-app">
   <div class="handoff-upload-shell">
     <main class="workspace">
       <header class="topbar">
@@ -879,9 +941,9 @@
           </div>
         </section>
 
-        <section style="max-width: 1180px; margin: 0 auto 10px; padding: 18px 22px; border: 1px solid var(--line); border-radius: 14px; background: #fff;" aria-label="交接案件資訊">
+        <section style="max-width: 1180px; margin: 0 auto 10px; padding: 18px 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); box-shadow: var(--orchard-shadow-sm);" aria-label="交接案件資訊">
           <div class="eyebrow">PROJECT</div>
-          <h2 id="caseNameDisplay" style="margin: 4px 0 0 0; font: 500 19px/1.4 Georgia, 'Noto Serif TC', serif;">載入中...</h2>
+          <h2 id="caseNameDisplay" style="margin: 4px 0 0 0; font: 700 19px/1.4 Georgia, 'Noto Serif TC', serif;">載入中...</h2>
         </section>
 
         <section class="map-panel mode-panel" aria-label="選擇交接模式">
@@ -930,7 +992,7 @@
             <div class="upload-panel-header">
               <div>
                 <div class="eyebrow">HANDOFF CHECKLIST</div>
-                <h2 id="checklistTitle">交接期清單</h2>
+                <h2 id="checklistTitle">交接清單</h2>
               </div>
               <div style="display: flex; gap: 12px; align-items: center;">
                 <a href="./[2026_0725 ulin] 交接文件完備性檢查規範.pdf" target="_blank" class="ghost-button" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font-size: 11px; height: 26px; min-height: 26px; padding: 0 10px; margin: 0; box-sizing: border-box;">
@@ -948,7 +1010,7 @@
               <ul class="handoff-list" id="handoffList"></ul>
 
               <div style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button id="agentCheckBtn" class="ghost-button" disabled style="min-height: 44px; font-size: 13px; cursor: not-allowed; border-color: #8fa697; color: #567766;">
+                <button id="agentCheckBtn" class="ghost-button" disabled style="min-height: 44px; font-size: 13px; cursor: not-allowed; border-color: var(--orchard-line-strong); color: var(--orchard-green-dark);">
                   Agent 快速欄位檢查
                 </button>
                 <button id="submitReviewBtn" class="primary-button" disabled style="min-height: 44px; font-size: 13px; cursor: not-allowed;">
@@ -1477,7 +1539,7 @@
       else if (hasWarnings) {
         reviewStatus.textContent = "需修正";
         reviewStatus.className = "status-pill"; 
-        reviewStatus.style.cssText = "background: #fdf0d5; color: #b87b00;";
+        reviewStatus.style.cssText = "background: var(--orchard-honey-soft); color: #805509;";
         reviewSummary.textContent = lastAgentReviewSummary || "Agent 檢查發現部分文件需修正或確認，請點擊黃色項目查看建議。";
         submitReviewBtn.disabled = true;
         submitReviewBtn.style.cursor = "not-allowed";
@@ -1523,7 +1585,7 @@
         let customStatusStyle = "";
         
         if (isWarning) {
-          customStatusStyle = "background: #fdf0d5; color: #b87b00;";
+          customStatusStyle = "background: var(--orchard-honey-soft); color: #805509;";
           feedbackHTML = `
             <div class="agent-feedback">
               <strong style="display:block; margin-bottom: 6px; font-size: 13px;">Agent 審閱建議：</strong>
