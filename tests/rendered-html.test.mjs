@@ -90,6 +90,81 @@ test("keeps the existing project map available from its module route", async () 
   assert.match(html, /四類知識地圖/);
 });
 
+test("opens the project map with the ORBIT demo result already built", async () => {
+  const html = await (await render("/onboarding/project-map")).text();
+  assert.match(html, /Project ORBIT 企業客戶自助服務入口網站/);
+  assert.match(html, /UAT 完成約 78%/);
+  assert.match(html, /目前顯示預先建立的示範結果/);
+  assert.match(html, /重新建立/);
+
+  const map = JSON.parse(await readFile(new URL("../shared/data/demo-project-map.json", import.meta.url), "utf8"));
+  const nodes = map.branches.flatMap((branch) => branch.nodes);
+  assert.equal(map.branches.length, 4);
+  assert.ok(map.branches.every((branch) => branch.nodes.length > 0));
+  assert.ok(nodes.every((node) => node.sources.length > 0), "every demo node cites a source block");
+});
+
+test("opens the assist chat with a recorded example answer", async () => {
+  const html = await (await render("/onboarding/chat")).text();
+  assert.match(html, /我接手 Project ORBIT 第一週，應該先處理哪些事？/);
+  assert.match(html, /業務內容待辦/);
+});
+
+test("demo pages reference documents that are published under public/demo", async () => {
+  const pages = await Promise.all(
+    ["handoff-upload-ui.html", "supervisor-review-ui.html", "newcomer-assignment-ui.html", "handoff-project-create-ui.html"]
+      .map((file) => readFile(new URL(`../public/legacy/${file}`, import.meta.url), "utf8")),
+  );
+  const referenced = new Set(pages.join("\n").match(/(?<=\/demo\/orbit\/)[^"`]+?\.(?:docx|md)/g));
+  referenced.add("01_業務內容交接_Project_ORBIT.docx");
+  for (const name of referenced) {
+    await readFile(new URL(`../public/demo/orbit/${name}`, import.meta.url));
+  }
+  assert.ok(pages.every((page) => !/社群成長企劃交接案/.test(page)), "demo pages use the ORBIT case");
+  assert.match(pages[2], /handoverCode: "FM0501"/);
+});
+
+test("extracts handoff document text for the upload and review pages", async () => {
+  const worker = await loadWorker("documents-test");
+  const name = "02_人際關係交接_Project_ORBIT.docx";
+  const form = new FormData();
+  form.append("file", new File([await readFile(new URL(`../public/demo/orbit/${name}`, import.meta.url))], name));
+  form.append("file", new File([new Uint8Array([37, 80, 68, 70])], "scan.pdf", { type: "application/pdf" }));
+
+  const response = await worker.fetch(
+    new Request("http://localhost/api/documents", { method: "POST", body: form }),
+    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
+  );
+  assert.equal(response.status, 200);
+  const { ok, documents } = await response.json();
+  assert.equal(ok, true);
+  assert.equal(documents[0].extractionStatus, "ok");
+  assert.match(documents[0].extractedText, /許雅婷｜營運副總/);
+  assert.ok(documents[0].extractedText.indexOf("1. 團隊成員與分工") < documents[0].extractedText.indexOf("許雅婷"));
+  assert.equal(documents[1].extractionStatus, "unsupported");
+});
+
+test("runs the handoff field check through the agent review API", async () => {
+  const worker = await loadWorker("review-test");
+  const response = await worker.fetch(
+    new Request("http://localhost/api/agent/review", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        checklist: [{ title: "P2 聯絡時機", text: "知道什麼事情階段應該找誰" }],
+        files: [{ fileName: "draft.txt", mappedItemTitle: "P2 聯絡時機", extractedText: "有事再說。" }],
+      }),
+    }),
+    { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
+    { waitUntil() {}, passThroughOnException() {} },
+  );
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.issues[0].itemTitle, "P2 聯絡時機");
+  assert.match(result.issues[0].message, /聯絡時機/);
+});
+
 const portals = {
   newcomer: {
     labels: ["現有資料", "企劃地圖", "新人上手路線圖", "風險知識管理"],

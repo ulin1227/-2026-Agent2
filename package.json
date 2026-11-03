@@ -6,6 +6,7 @@
     "node": ">=22.18.0"
   },
   "scripts": {
+    "predev": "CI=1 npm run db:migrate:local",
     "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
     "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
     "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
@@ -14,7 +15,8 @@
     "db:generate": "drizzle-kit generate",
     "test:unit": "tsx --test tests/rag.test.ts",
     "rag:evaluate": "tsx scripts/rag-evaluate.ts",
-    "db:migrate:local": "WRANGLER_WRITE_LOGS=false wrangler d1 migrations apply DB --local --persist-to .wrangler/state -c wrangler.local.json"
+    "db:migrate:local": "WRANGLER_WRITE_LOGS=false wrangler d1 migrations apply DB --local --persist-to .wrangler/state -c wrangler.local.json",
+    "demo:project-map": "tsx scripts/build-demo-project-map.ts"
   },
   "dependencies": {
     "@rolldown/binding-darwin-arm64": "^1.0.1",

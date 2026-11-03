@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChatGPTUser } from "../chatgpt-auth";
 import type { AdminOverview } from "../../lib/rag/admin-overview";
 import styles from "./rag-admin.module.css";
@@ -22,6 +22,15 @@ interface QueryResponse {
     citation: { fileName: string; locator: string; chunkIndex: number };
   }>;
 }
+
+const DOCX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+// Project ORBIT handoff documents served from public/demo, indexed automatically when the index is empty.
+const DEMO_DOCUMENTS = [
+  "01_業務內容交接_Project_ORBIT.docx",
+  "02_人際關係交接_Project_ORBIT.docx",
+  "03_公司資產交接_Project_ORBIT.docx",
+];
+const DEFAULT_QUESTION = "ORBIT 專案目前最需要注意的風險是什麼？";
 
 function formatDate(value: string | null): string {
   if (!value) return "尚無紀錄";
@@ -44,11 +53,14 @@ export function RagAdminClient({
 }) {
   const [projectId, setProjectId] = useState("project-orbit");
   const [overview, setOverview] = useState<AdminOverview | null>(initialOverview);
-  const [question, setQuestion] = useState("ORBIT 專案目前最需要注意的風險是什麼？");
+  const [question, setQuestion] = useState(DEFAULT_QUESTION);
   const [queryResult, setQueryResult] = useState<QueryResponse | null>(null);
   const [filter, setFilter] = useState("");
-  const [busy, setBusy] = useState<"load" | "sync" | "query" | null>(null);
+  const [busy, setBusy] = useState<"load" | "sync" | "upload" | "query" | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const uploadInputRef = useRef<HTMLInputElement>(null);
+  const demoRequestedRef = useRef(false);
 
   const loadOverview = useCallback(async (selectedProject = projectId) => {
     setBusy("load");
@@ -77,6 +89,13 @@ export function RagAdminClient({
         body: JSON.stringify({ projectId: projectId.trim(), source: { type: "local-folder", scope: "." } }),
       });
       const payload = await response.json() as { error?: string };
+      if (response.status === 503) {
+        // Local folder access is unavailable in the Workers runtime; index the bundled demo documents instead.
+        setBusy(null);
+        await loadDemoDocuments();
+        setNotice("此執行環境無法讀取本機資料夾，已改為載入 Project ORBIT 示範文件。");
+        return;
+      }
       if (!response.ok) throw new Error(payload.error || "同步失敗。");
       await loadOverview(projectId);
     } catch (caught) {
@@ -85,19 +104,68 @@ export function RagAdminClient({
     }
   };
 
-  const runQuery = async () => {
+  const uploadDocuments = async (files: File[], targetProject = projectId.trim()) => {
+    setBusy("upload");
+    setError("");
+    setNotice("");
+    try {
+      for (const file of files) {
+        const form = new FormData();
+        form.append("projectId", targetProject);
+        form.append("relativePath", file.name);
+        form.append("file", file);
+        const response = await fetch("/api/knowledge/documents", { method: "POST", body: form });
+        const payload = await response.json() as { error?: string };
+        if (!response.ok) throw new Error(`${file.name}：${payload.error || "上傳失敗。"}`);
+      }
+      setNotice(`已建立 ${files.length} 份文件的索引。`);
+      await loadOverview(targetProject);
+      return true;
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "上傳失敗。");
+      setBusy(null);
+      return false;
+    }
+  };
+
+  const loadDemoDocuments = async () => {
+    try {
+      const files = await Promise.all(DEMO_DOCUMENTS.map(async (name) => {
+        const response = await fetch(`/demo/orbit/${encodeURIComponent(name)}`);
+        if (!response.ok) throw new Error(`無法讀取示範文件 ${name}`);
+        return new File([await response.blob()], name, { type: DOCX_MIME_TYPE });
+      }));
+      if (await uploadDocuments(files, "project-orbit")) {
+        setProjectId("project-orbit");
+        await runQuery(DEFAULT_QUESTION, "project-orbit");
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "無法載入示範文件。");
+      setBusy(null);
+    }
+  };
+
+  useEffect(() => {
+    if (demoRequestedRef.current || initialOverview.documents.length > 0) return;
+    demoRequestedRef.current = true;
+    void loadDemoDocuments();
+    // Runs once on first render with an empty index.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const runQuery = async (questionText = question.trim(), targetProject = projectId.trim()) => {
     setBusy("query");
     setError("");
     try {
       const response = await fetch("/api/assistant/query", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ projectId: projectId.trim(), question: question.trim(), topK: 5 }),
+        body: JSON.stringify({ projectId: targetProject, question: questionText, topK: 5 }),
       });
       const payload = await response.json() as QueryResponse | { error?: string };
       if (!response.ok) throw new Error("error" in payload && payload.error ? payload.error : "查詢失敗。");
       setQueryResult(payload as QueryResponse);
-      await loadOverview(projectId);
+      await loadOverview(targetProject);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "查詢失敗。");
       setBusy(null);
@@ -133,12 +201,28 @@ export function RagAdminClient({
           <input value={projectId} onChange={(event) => setProjectId(event.target.value)} maxLength={120} />
         </label>
         <button type="button" onClick={() => void loadOverview()} disabled={busy !== null}>重新整理</button>
+        <button type="button" onClick={() => uploadInputRef.current?.click()} disabled={busy !== null || !projectId.trim()}>
+          {busy === "upload" ? "上傳中…" : "上傳 DOCX"}
+        </button>
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept={`.docx,${DOCX_MIME_TYPE}`}
+          multiple
+          hidden
+          onChange={(event) => {
+            const files = Array.from(event.target.files ?? []);
+            event.currentTarget.value = "";
+            if (files.length) void uploadDocuments(files);
+          }}
+        />
         <button className={styles.primary} type="button" onClick={syncKnowledge} disabled={busy !== null || !projectId.trim()}>
           {busy === "sync" ? "同步中…" : "同步本機知識庫"}
         </button>
       </section>
 
       {error && <div className={styles.error} role="alert">{error}</div>}
+      {notice && !error && <div className={styles.notice} role="status">{notice}</div>}
 
       <section className={styles.metrics} aria-label="RAG 狀態摘要">
         <article><span>文件</span><strong>{overview?.counts.documents ?? "—"}</strong><small>已建立索引</small></article>
@@ -161,7 +245,7 @@ export function RagAdminClient({
         <section className={styles.panel}>
           <div className={styles.panelHeading}><div><span>LIVE RETRIEVAL</span><h2>RAG 查詢</h2></div></div>
           <textarea value={question} onChange={(event) => setQuestion(event.target.value)} rows={4} maxLength={2000} />
-          <button className={styles.primary} type="button" onClick={runQuery} disabled={busy !== null || !question.trim() || !projectId.trim()}>
+          <button className={styles.primary} type="button" onClick={() => void runQuery()} disabled={busy !== null || !question.trim() || !projectId.trim()}>
             {busy === "query" ? "檢索中…" : "執行 Top-5 檢索"}
           </button>
           {queryResult && (
@@ -189,7 +273,7 @@ export function RagAdminClient({
                 <span>DOCX</span><div><strong>{document.fileName}</strong><small>{document.chunkCount} chunks · {formatBytes(document.size)} · checksum {document.checksumPrefix}</small></div>
               </article>
             ))}
-            {overview && overview.documents.length === 0 && <p className={styles.empty}>尚未同步此專案的文件。</p>}
+            {overview && overview.documents.length === 0 && <p className={styles.empty}>{busy === "upload" ? "正在載入 Project ORBIT 示範文件…" : "尚未同步此專案的文件。"}</p>}
           </div>
           <label className={styles.search}><span>搜尋 chunk 內容</span><input value={filter} onChange={(event) => setFilter(event.target.value)} placeholder="檔名、locator 或文字" /></label>
           <div className={styles.chunks}>

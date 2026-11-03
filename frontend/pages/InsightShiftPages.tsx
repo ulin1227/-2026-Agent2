@@ -10,6 +10,11 @@ import type {
   MindMapRelation,
   MindMapResult,
 } from "@/lib/mindmap";
+import demoProjectMapJson from "@/shared/data/demo-project-map.json";
+
+// Pre-built map of the Project ORBIT demo documents, shown until a new folder is analyzed.
+const demoProjectMap = demoProjectMapJson as MindMapResult;
+const demoFirstBranch = demoProjectMap.branches.find((branch) => branch.nodes.length) ?? demoProjectMap.branches[0];
 
 const MAX_BATCH_FILES = 50;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -211,14 +216,15 @@ function MindMapDiagram({
 export function ProjectMapPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [selectionSummary, setSelectionSummary] = useState<SelectionSummary | null>(null);
-  const [result, setResult] = useState<MindMapResult | null>(null);
+  const [result, setResult] = useState<MindMapResult | null>(demoProjectMap);
+  const [showingDemo, setShowingDemo] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
   const [showSources, setShowSources] = useState(true);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [agentPanelCollapsed, setAgentPanelCollapsed] = useState(false);
-  const [selectedBranchId, setSelectedBranchId] = useState<BranchId>("tasks");
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedBranchId, setSelectedBranchId] = useState<BranchId>(demoFirstBranch.id);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(demoFirstBranch.nodes[0]?.id ?? null);
   const inputRef = useRef<HTMLInputElement>(null);
   const mapPanelRef = useRef<HTMLElement>(null);
 
@@ -262,6 +268,7 @@ export function ProjectMapPage() {
       totalBytes,
     });
     setResult(null);
+    setShowingDemo(false);
     setSelectedNodeId(null);
     setError(
       accepted.length
@@ -291,6 +298,7 @@ export function ProjectMapPage() {
       }
       const nextResult = payload as MindMapResult;
       setResult(nextResult);
+      setShowingDemo(false);
       const firstBranch = nextResult.branches.find((branch) => branch.nodes.length) ?? nextResult.branches[0];
       setSelectedBranchId(firstBranch.id);
       setSelectedNodeId(firstBranch.nodes[0]?.id ?? null);
@@ -303,6 +311,16 @@ export function ProjectMapPage() {
     } finally {
       setRunning(false);
     }
+  };
+
+  const restoreDemo = () => {
+    setFiles([]);
+    setSelectionSummary(null);
+    setError("");
+    setResult(demoProjectMap);
+    setShowingDemo(true);
+    setSelectedBranchId(demoFirstBranch.id);
+    setSelectedNodeId(demoFirstBranch.nodes[0]?.id ?? null);
   };
 
   const downloadMap = () => {
@@ -341,11 +359,51 @@ export function ProjectMapPage() {
     setSelectedNodeId(nodeId);
   };
 
+  const uploadCard = (
+    <section className="upload-card">
+      <span className="eyebrow">RUNTIME DOCX CLASSIFICATION</span>
+      <h2>把整個交接資料夾，整理成四類知識地圖。</h2>
+      <p>不需要先整理檔名或分類。系統會掃描資料夾內的 DOCX，略過不支援的格式，再依文件內容建立節點與關係；此階段不評分，也不檢查缺漏。</p>
+      <button
+        className="upload-drop"
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(event) => event.preventDefault()}
+        onDrop={(event) => {
+          event.preventDefault();
+          chooseFiles(event.dataTransfer.files);
+        }}
+      >
+        <span className="upload-symbol">⌑</span>
+        <strong>{files.length ? `已找到 ${files.length} 份可處理文件` : "選擇整個資料夾"}</strong>
+        <small>也可以拖入多份 DOCX · 最多 50 份、單檔 10 MB、整批 50 MB</small>
+      </button>
+      {selectionSummary && (
+        <div className="scan-summary" aria-live="polite">
+          <span><b>{selectionSummary.scanned}</b> 個檔案已掃描</span>
+          <span><b>{files.length}</b> 份 DOCX 將處理</span>
+          <span><b>{selectionSummary.skipped}</b> 個檔案已略過</span>
+          <span><b>{(selectionSummary.totalBytes / 1024 / 1024).toFixed(1)}</b> MB</span>
+        </div>
+      )}
+      {files.length > 0 && (
+        <div className="file-selection">
+          {files.slice(0, 12).map((file, index) => <span key={`${file.webkitRelativePath || file.name}-${file.size}`} title={file.webkitRelativePath || file.name}><b>{index + 1}</b>{file.webkitRelativePath || file.name}</span>)}
+          {files.length > 12 && <span className="selection-overflow"><b>＋</b>另有 {files.length - 12} 份 DOCX 將一併處理</span>}
+        </div>
+      )}
+      <div className="upload-actions">
+        <button className="primary-button" type="button" disabled={running || files.length === 0} onClick={analyze}>{running ? "正在解析與分類…" : "建立心智圖"}</button>
+        <small>需要在伺服器設定 OPENAI_API_KEY</small>
+      </div>
+    </section>
+  );
+
   return (
     <main className={`app-shell ${sidebarCollapsed ? "is-sidebar-collapsed" : ""} ${agentPanelCollapsed ? "is-agent-collapsed" : ""}`}>
       <SiteSidebar active="project-map" collapsed={sidebarCollapsed} onToggle={toggleSidebar}>
         <section className="package-block">
-          <div className="section-label"><span>目前資料夾</span><em>{files.length} 份</em></div>
+          <div className="section-label"><span>目前資料夾</span><em>{files.length || result?.files.length || 0} 份</em></div>
           <h2>{result?.project.name ?? "待選擇文件"}</h2>
           <p>{result ? `${result.meta.evidenceCount} 個內容區塊` : selectionSummary ? selectionSummary.folderName : "選擇一個資料夾開始整理"}</p>
           <div className="file-list">
@@ -354,6 +412,13 @@ export function ProjectMapPage() {
                 <span className="file-icon">DOC</span>
                 <span><b>{file.name.replace(/\.docx$/i, "")}</b><small>{result?.files[index] ? `${result.files[index].tables} 個表格 · 已解析` : `${Math.ceil(file.size / 1024)} KB`}</small></span>
                 <i>{result ? "✓" : index + 1}</i>
+              </div>
+            ))}
+            {files.length === 0 && result?.files.slice(0, 8).map((file) => (
+              <div className="file-item" key={file.name} title={file.name}>
+                <span className="file-icon">DOC</span>
+                <span><b>{file.name.replace(/\.docx$/i, "")}</b><small>{file.tables} 個表格 · 已解析</small></span>
+                <i>✓</i>
               </div>
             ))}
             {files.length > 8 && <div className="file-overflow">另有 {files.length - 8} 份文件</div>}
@@ -369,6 +434,7 @@ export function ProjectMapPage() {
           </div>
           <div className="top-actions">
             {result && <button className="ghost-button" onClick={() => setShowSources((value) => !value)}>{showSources ? "隱藏來源" : "顯示來源"}</button>}
+            {!showingDemo && <button className="ghost-button" onClick={restoreDemo}>示範結果</button>}
             <button className="ghost-button" onClick={() => inputRef.current?.click()}>選擇資料夾</button>
             <button className="primary-button" onClick={analyze} disabled={running || files.length === 0}>{running ? "正在分類內容…" : result ? "重新建立" : "建立心智圖"}</button>
           </div>
@@ -390,45 +456,7 @@ export function ProjectMapPage() {
         </header>
 
         <div className="content-scroll">
-          {!result && (
-            <section className="upload-card">
-              <span className="eyebrow">RUNTIME DOCX CLASSIFICATION</span>
-              <h2>把整個交接資料夾，整理成四類知識地圖。</h2>
-              <p>不需要先整理檔名或分類。系統會掃描資料夾內的 DOCX，略過不支援的格式，再依文件內容建立節點與關係；此階段不評分，也不檢查缺漏。</p>
-              <button
-                className="upload-drop"
-                type="button"
-                onClick={() => inputRef.current?.click()}
-                onDragOver={(event) => event.preventDefault()}
-                onDrop={(event) => {
-                  event.preventDefault();
-                  chooseFiles(event.dataTransfer.files);
-                }}
-              >
-                <span className="upload-symbol">⌑</span>
-                <strong>{files.length ? `已找到 ${files.length} 份可處理文件` : "選擇整個資料夾"}</strong>
-                <small>也可以拖入多份 DOCX · 最多 50 份、單檔 10 MB、整批 50 MB</small>
-              </button>
-              {selectionSummary && (
-                <div className="scan-summary" aria-live="polite">
-                  <span><b>{selectionSummary.scanned}</b> 個檔案已掃描</span>
-                  <span><b>{files.length}</b> 份 DOCX 將處理</span>
-                  <span><b>{selectionSummary.skipped}</b> 個檔案已略過</span>
-                  <span><b>{(selectionSummary.totalBytes / 1024 / 1024).toFixed(1)}</b> MB</span>
-                </div>
-              )}
-              {files.length > 0 && (
-                <div className="file-selection">
-                  {files.slice(0, 12).map((file, index) => <span key={`${file.webkitRelativePath || file.name}-${file.size}`} title={file.webkitRelativePath || file.name}><b>{index + 1}</b>{file.webkitRelativePath || file.name}</span>)}
-                  {files.length > 12 && <span className="selection-overflow"><b>＋</b>另有 {files.length - 12} 份 DOCX 將一併處理</span>}
-                </div>
-              )}
-              <div className="upload-actions">
-                <button className="primary-button" type="button" disabled={running || files.length === 0} onClick={analyze}>{running ? "正在解析與分類…" : "建立心智圖"}</button>
-                <small>需要在伺服器設定 OPENAI_API_KEY</small>
-              </div>
-            </section>
-          )}
+          {!result && uploadCard}
 
           {error && <div className="error-banner" role="alert"><b>目前無法完成</b><span>{error}</span></div>}
 
@@ -438,7 +466,7 @@ export function ProjectMapPage() {
                 <div className="overview-copy">
                   <span className="eyebrow">CLASSIFIED KNOWLEDGE MAP</span>
                   <h2>{result.project.name}</h2>
-                  <p>{result.files.length} 份文件已完成解析，內容依四個交接主題分類；點選節點即可查看摘要、細節與原始文件位置。</p>
+                  <p>{result.files.length} 份文件已完成解析，內容依四個交接主題分類；點選節點即可查看摘要、細節與原始文件位置。{showingDemo && "目前顯示預先建立的示範結果，可在下方選擇新的資料夾重新建立。"}</p>
                   <div className="overview-meta">
                     <span><b>{result.files.length}</b> 份文件</span><span><b>{result.files.reduce((total, file) => total + file.tables, 0)}</b> 個表格</span><span><b>{nodeCount}</b> 個節點</span>
                   </div>
@@ -470,6 +498,7 @@ export function ProjectMapPage() {
                   </div>
                 )}
               </section>
+              {showingDemo && uploadCard}
             </>
           )}
         </div>
@@ -479,7 +508,7 @@ export function ProjectMapPage() {
         <div className="agent-header">
           <div className="agent-identity">
             <div className="agent-avatar"><span></span></div>
-            <div className="agent-header-copy"><strong>內容分類 Agent</strong><small><i></i>{running ? "正在解析與分類" : result ? "心智圖已建立" : "等待交接資料夾"}</small></div>
+            <div className="agent-header-copy"><strong>內容分類 Agent</strong><small><i></i>{running ? "正在解析與分類" : showingDemo ? "示範心智圖" : result ? "心智圖已建立" : "等待交接資料夾"}</small></div>
           </div>
           <button className="agent-panel-toggle" type="button" onClick={toggleAgentPanel} aria-label={agentPanelCollapsed ? "展開右側 Agent 面板" : "收合右側 Agent 面板"} aria-expanded={!agentPanelCollapsed}>
             <span aria-hidden="true">{agentPanelCollapsed ? "‹" : "›"}</span>

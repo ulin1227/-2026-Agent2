@@ -832,6 +832,14 @@
       alert("交接專案已建立。此為前端原型，後續可接 API 儲存案件與成員。");
     });
 
+    // Default demo state: the Project ORBIT handoff case. 清空重填 starts a new project.
+    projectName.value = "Project ORBIT 交接案";
+    departmentName.value = "專案營運部";
+    handoffDeadline.value = "2026-08-14";
+    roleGroups[0].members = [{ id: crypto.randomUUID(), name: "許雅婷", employeeId: "A10231" }];
+    roleGroups[1].members = [{ id: crypto.randomUUID(), name: "林書妍", employeeId: "A20417" }];
+    roleGroups[2].members = [{ id: crypto.randomUUID(), name: "陳柏維", employeeId: "A30152" }];
+
     renderRoles();
   </script>
 </body>

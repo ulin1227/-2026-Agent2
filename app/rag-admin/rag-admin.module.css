@@ -131,6 +131,16 @@
   background: #fff0ed;
 }
 
+.notice {
+  max-width: 1460px;
+  margin: 0 auto 16px;
+  padding: 13px 18px;
+  border: 1px solid #c9d7a3;
+  border-radius: 13px;
+  color: #4f6420;
+  background: #f4f8e6;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -363,7 +363,7 @@
 
         <section class="map-panel project-strip" aria-label="交接專案資訊">
           <div class="eyebrow">PROJECT</div>
-          <h2 id="projectTitle">社群成長企劃交接案</h2>
+          <h2 id="projectTitle">Project ORBIT 交接案</h2>
           <p id="projectMeta">交接資料已通過主管審核，知識庫已可供新人連動使用。</p>
         </section>
 
@@ -419,7 +419,8 @@
 
   <script>
     window.assignmentData = window.assignmentData || {
-      projectTitle: "社群成長企劃交接案",
+      projectTitle: "Project ORBIT 交接案",
+      handoverCode: "FM0501",
       knowledgeReady: true
     };
 
@@ -470,7 +471,10 @@
 
       projectTitle.textContent = window.assignmentData.projectTitle || "未命名交接專案";
 
-      knowledgeStatus.textContent = ready ? "建立中" : "建立中";
+      knowledgeStatus.textContent = ready ? "已完成" : "建立中";
+      projectMeta.textContent = window.assignmentData.handoverCode
+        ? `交接資料已通過主管審核，知識庫已可供新人連動使用。新人交接碼：${window.assignmentData.handoverCode}（新人登入後輸入即可連結專案）`
+        : "交接資料已通過主管審核，知識庫已可供新人連動使用。";
       linkStatus.textContent = `${progress}%`;
 
       formStatus.textContent = done ? "已填寫" : "尚未完成";
@@ -505,6 +509,20 @@
     });
 
     startDate.min = todayString();
+
+    // Default demo state: 周以晨 already assigned to Project ORBIT. 清空重填 assigns another newcomer.
+    newcomerName.value = "周以晨";
+    newcomerId.value = "A20488";
+    newcomerTitle.value = "專案營運專員";
+    startDate.value = "2026-08-14";
+    supervisorNote.value = "第一週先照新人上手路線圖完成 UAT 阻塞問題 owner 確認與 SSO 報告追蹤；有疑問先查看來源文件，再找我確認。";
+    assignedNewcomers = [{
+      name: newcomerName.value,
+      newcomerId: newcomerId.value,
+      title: newcomerTitle.value,
+      startDate: startDate.value,
+      note: supervisorNote.value
+    }];
     renderPage();
   </script>
 </body>

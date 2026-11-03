@@ -976,6 +976,7 @@
               </div>
               <div class="upload-actions">
                 <input class="file-input" id="fileInput" type="file" multiple>
+                <button class="ghost-button" type="button" id="clearFilesBtn">清空檔案</button>
                 <label class="primary-button" for="fileInput">加入檔案</label>
               </div>
             </div>
@@ -1076,6 +1077,7 @@
     const experiencePrompts = document.querySelector("#experiencePrompts");
     const experienceInput = document.querySelector("#experienceInput");
     const experienceSendBtn = document.querySelector("#experienceSendBtn");
+    const clearFilesBtn = document.querySelector("#clearFilesBtn");
     let isAgentChecked = false;
     let agentWarnings = {};
     let checkedItemTitles = new Set();
@@ -1084,7 +1086,7 @@
     let activeExperienceQuestionId = "";
 
     window.uploadData = window.uploadData || {
-      projectTitle: "社群成長企劃交接案",
+      projectTitle: "Project ORBIT 交接案",
       userRole: "離職同事"
     };
 
@@ -1687,7 +1689,7 @@
       addFiles(event.dataTransfer.files);
     });
 
-    agentCheckBtn.addEventListener("click", async () => {
+    async function runAgentReview({ silent = false } = {}) {
       agentCheckBtn.disabled = true;
       agentCheckBtn.style.cursor = "not-allowed";
       agentCheckBtn.textContent = "檢查中...";
@@ -1718,12 +1720,66 @@
         renderChecklist();
       } catch (error) {
         console.error(error);
-        alert(`Agent 檢查失敗：${error.message}\n\n請確認後端已啟動，且 OpenClaw API 設定正確。`);
+        if (!silent) alert(`Agent 檢查失敗：${error.message}\n\n請確認後端已啟動後再試一次。`);
       } finally {
         agentCheckBtn.textContent = "Agent 快速欄位檢查";
         renderChecklist();
       }
+    }
+
+    agentCheckBtn.addEventListener("click", () => runAgentReview());
+
+    clearFilesBtn.addEventListener("click", () => {
+      if (uploadedFiles.length && !confirm("確定要清空目前所有檔案，重新上傳嗎？")) return;
+      uploadedFiles = [];
+      clearAllAgentReview();
+      renderPage();
     });
+
+    // Default demo state: the Project ORBIT handoff documents mapped to the fast-mode checklist,
+    // plus sample interview answers, so the page opens with results already in place.
+    const demoDocumentBase = "/demo/orbit/";
+    const demoMappings = [
+      ["01_業務內容交接_Project_ORBIT.docx", "B1 工作內容"],
+      ["01_業務內容交接_Project_ORBIT.docx", "B2 接手行動"],
+      ["02_人際關係交接_Project_ORBIT.docx", "P1 關鍵人物"],
+      ["02_人際關係交接_Project_ORBIT.docx", "P2 聯絡時機"],
+      ["03_公司資產交接_Project_ORBIT.docx", "A1 必要資源"],
+      ["03_公司資產交接_Project_ORBIT.docx", "A2 取得方式"]
+    ];
+    const demoExperienceAnswers = {
+      "urgent-contact": "核心功能異常或發票資料可能錯配時，先找陳柏維（工程）和郭芷晴（資安），同時通知許雅婷，不要等到週二會議。",
+      "people-style": "找陳柏維前先準備好工單編號、重現步驟和截圖，他不喜歡只在聊天裡描述問題。許雅婷要的是現況、影響、建議和最晚決策日。",
+      "misunderstood-process": "試行客戶常會順口提新功能，現場不要答應日期，先記下使用情境，週五統一評估。",
+      "small-details": "禾木餐飲的吳昱廷需要在測試前一天拿到測試資料；安域科技週四開會前先把未完成項目列好，會議會順很多。"
+    };
+
+    async function loadDemoState() {
+      if (!localStorage.getItem("handoffExperienceAnswers")) {
+        Object.entries(demoExperienceAnswers).forEach(([questionId, text]) => saveExperienceAnswer(questionId, text));
+        renderExperienceInterview();
+      }
+
+      try {
+        const names = [...new Set(demoMappings.map(([name]) => name))];
+        const files = new Map(await Promise.all(names.map(async (name) => {
+          const response = await fetch(`${demoDocumentBase}${encodeURIComponent(name)}`);
+          if (!response.ok) throw new Error(`無法讀取示範文件 ${name}`);
+          const blob = await response.blob();
+          return [name, new File([blob], name, { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" })];
+        })));
+        if (uploadedFiles.length) return;
+        uploadedFiles = demoMappings.map(([name, title], index) => ({
+          id: `demo-${index + 1}`,
+          file: files.get(name),
+          mappedItemTitle: title
+        }));
+        renderPage();
+        await runAgentReview({ silent: true });
+      } catch (error) {
+        console.error(error);
+      }
+    }
 
     handoffList.addEventListener("click", (e) => {
       if (e.target.classList.contains("resolve-btn")) {
@@ -1804,6 +1860,7 @@
     loadExperienceRecords();
     renderExperienceInterview();
     renderPage();
+    loadDemoState();
   </script>
 </body>
 </html>

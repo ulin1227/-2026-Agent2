@@ -16,6 +16,7 @@ import type {
   ConnectorStatus,
   ToneProfile,
 } from "@/backend/services/agent";
+import demoChat from "@/shared/data/demo-chat.json";
 
 type Message = {
   id: string;
@@ -349,6 +350,32 @@ function RiskPreview({
   );
 }
 
+function replyToMessage(id: string, reply: AgentReply): Message {
+  return {
+    id,
+    role: "agent",
+    text: reply.answer,
+    contentBlocks: reply.contentBlocks,
+    meta: {
+      jobId: reply.jobId,
+      status: reply.status,
+      confidence: reply.confidence,
+      sources: reply.sources,
+      guardrail: reply.guardrail,
+      toneProfile: reply.toneProfile,
+      connectors: reply.connectors,
+      rag: reply.rag,
+      provider: reply.meta.provider,
+    },
+  };
+}
+
+// A recorded exchange with the local agent, so the page opens with an example answer.
+const demoMessages: Message[] = [
+  { id: "u-demo", role: "user", text: demoChat.question },
+  replyToMessage("a-demo", demoChat.reply as unknown as AgentReply),
+];
+
 export default function ChatPage() {
   const [modeId, setModeId] = useState<(typeof knowledgeModes)[number]["id"]>(
     "project-map",
@@ -359,7 +386,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(demoMessages);
 
   const mode = useMemo(
     () => knowledgeModes.find((item) => item.id === modeId) ?? knowledgeModes[0],
@@ -398,26 +425,7 @@ export default function ChatPage() {
       }
 
       const reply = (await response.json()) as AgentReply;
-      setMessages((current) => [
-        ...current,
-        {
-          id: `a-${timestamp}`,
-          role: "agent",
-          text: reply.answer,
-          contentBlocks: reply.contentBlocks,
-          meta: {
-            jobId: reply.jobId,
-            status: reply.status,
-            confidence: reply.confidence,
-            sources: reply.sources,
-            guardrail: reply.guardrail,
-            toneProfile: reply.toneProfile,
-            connectors: reply.connectors,
-            rag: reply.rag,
-            provider: reply.meta.provider,
-          },
-        },
-      ]);
+      setMessages((current) => [...current, replyToMessage(`a-${timestamp}`, reply)]);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Agent API 發生未知錯誤";

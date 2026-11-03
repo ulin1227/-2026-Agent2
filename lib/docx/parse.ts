@@ -168,3 +168,28 @@ export async function parseDocx(
 
   return { fileName, paragraphCount, tableCount, blocks };
 }
+
+// Plain text in document order (paragraphs and table rows interleaved), for previews and field checks.
+export async function extractDocxText(buffer: ArrayBuffer): Promise<string> {
+  const xml = textDecoder.decode(await readZipEntry(buffer, "word/document.xml"));
+  const lines: string[] = [];
+
+  for (const match of xml.matchAll(/<w:tbl\b[\s\S]*?<\/w:tbl>|<w:p\b[\s\S]*?<\/w:p>/g)) {
+    const fragment = match[0];
+    if (!fragment.startsWith("<w:tbl")) {
+      const text = textFromFragment(fragment);
+      if (text) lines.push(text);
+      continue;
+    }
+    for (const rowMatch of fragment.matchAll(/<w:tr\b[\s\S]*?<\/w:tr>/g)) {
+      const cells = Array.from(
+        rowMatch[0].matchAll(/<w:tc\b[\s\S]*?<\/w:tc>/g),
+        (cellMatch) => textFromFragment(cellMatch[0]),
+      ).filter(Boolean);
+      if (cells.length) lines.push(cells.join("｜"));
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}

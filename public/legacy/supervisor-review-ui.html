@@ -811,78 +811,92 @@
       
       // 動態資料來源，可由後端 API 或 localStorage 注入
       window.reviewData = window.reviewData || {
-        projectTitle: "社群成長企劃交接案",
+        projectTitle: "Project ORBIT 交接案",
         modeTitle: "最低可接手模式",
         modePriority: "適合：臨時離職、交接時間很短、只求新人不斷線。",
         uploadedFiles: [
           { 
             id: "f1", 
+            status: "approved",
+            note: "工作目的、職責與定期工作都有寫清楚。",
             mappedTitle: "B1 工作內容",
             fileDescription: "知道主要負責什麼、預期產出是什麼",
             fileName: "01_業務內容交接_Project_ORBIT.docx", 
             previewFileName: "01_業務內容交接_Project_ORBIT.docx",
-            fileUrl: "./01_業務內容交接_Project_ORBIT.docx",
+            fileUrl: "/demo/orbit/01_業務內容交接_Project_ORBIT.docx",
             fileSize: "41 KB"
           },
           { 
             id: "f2", 
+            status: "approved",
+            note: "進度、下一步與期限齊全，SSO 報告 8/21 要持續追。",
             mappedTitle: "B2 接手行動",
             fileDescription: "知道目前進度、接手後第一步、重要期限",
             fileName: "01_業務內容交接_Project_ORBIT.docx", 
             previewFileName: "01_業務內容交接_Project_ORBIT.docx",
-            fileUrl: "./01_業務內容交接_Project_ORBIT.docx",
+            fileUrl: "/demo/orbit/01_業務內容交接_Project_ORBIT.docx",
             fileSize: "41 KB"
           },
           { 
             id: "f3", 
+            status: "approved",
+            note: "內外部窗口與負責事項完整。",
             mappedTitle: "P1 關鍵人物",
             fileDescription: "知道主要內外部窗口是誰、各自負責什麼",
             fileName: "02_人際關係交接_Project_ORBIT.docx", 
             previewFileName: "02_人際關係交接_Project_ORBIT.docx",
-            fileUrl: "./02_人際關係交接_Project_ORBIT.docx",
+            fileUrl: "/demo/orbit/02_人際關係交接_Project_ORBIT.docx",
             fileSize: "41 KB"
           },
           { 
             id: "f4", 
+            status: "approved",
+            note: "升級路徑清楚，核心功能異常要立即通知許雅婷。",
             mappedTitle: "P2 聯絡時機",
             fileDescription: "知道什麼事情階段應該找誰",
             fileName: "02_人際關係交接_Project_ORBIT.docx", 
             previewFileName: "02_人際關係交接_Project_ORBIT.docx",
-            fileUrl: "./02_人際關係交接_Project_ORBIT.docx",
+            fileUrl: "/demo/orbit/02_人際關係交接_Project_ORBIT.docx",
             fileSize: "41 KB"
           },
           { 
             id: "f5", 
+            status: "approved",
+            note: "系統、文件與設備清單完整。",
             mappedTitle: "A1 必要資源",
             fileDescription: "知道工作需要哪些系統、文件或設備",
             fileName: "03_公司資產交接_Project_ORBIT.docx", 
             previewFileName: "03_公司資產交接_Project_ORBIT.docx",
-            fileUrl: "./03_公司資產交接_Project_ORBIT.docx",
+            fileUrl: "/demo/orbit/03_公司資產交接_Project_ORBIT.docx",
             fileSize: "41 KB"
           },
           { 
             id: "f6", 
+            status: "approved",
+            note: "權限申請方式齊全；BI-042 權限待 8/8 完成。",
             mappedTitle: "A2 取得方式",
             fileDescription: "知道資源在哪裡,以及如何取得權限",
             fileName: "03_公司資產交接_Project_ORBIT.docx", 
             previewFileName: "03_公司資產交接_Project_ORBIT.docx",
-            fileUrl: "./03_公司資產交接_Project_ORBIT.docx",
+            fileUrl: "/demo/orbit/03_公司資產交接_Project_ORBIT.docx",
             fileSize: "41 KB"
           },
           { 
             id: "f7", 
+            status: "approved",
+            note: "經驗訪談補充了溝通習慣，保留給新人參考。",
             mappedTitle: "其他補充資料",
             fileDescription: "離職同事額外提供的補充檔案。",
-            fileName: "PROJECT_ORBIT_supplement.pdf", 
-            previewFileName: "PROJECT_ORBIT_supplement.pdf",
-            fileUrl: "./PROJECT_ORBIT_supplement.pdf",
-            fileSize: "155 KB"
+            fileName: "ORBIT_經驗訪談紀錄.md", 
+            previewFileName: "ORBIT_經驗訪談紀錄.md",
+            fileUrl: "/demo/orbit/ORBIT_經驗訪談紀錄.md",
+            fileSize: "2 KB"
           }
         ]
       };
 
       const fakePreviewFileName = "03_公司資產交接_Project_ORBIT.docx";
-      const fakePreviewFileUrl = `./${fakePreviewFileName}`;
+      const fakePreviewFileUrl = `/demo/orbit/${fakePreviewFileName}`;
       const filesArray = Array.isArray(window.reviewData.uploadedFiles) ? window.reviewData.uploadedFiles : [];
 
       function canPreviewDocument(fileName) {
@@ -890,7 +904,7 @@
       }
 
       let reviewItems = filesArray.map((file) => {
-        const isOther = file.mappedTitle === "其他";
+        const isOther = String(file.mappedTitle || "").startsWith("其他");
         const safeFileName = file.fileName || "未命名檔案";
         const previewFileName = file.previewFileName || (canPreviewDocument(safeFileName) ? safeFileName : fakePreviewFileName);
         const previewFileUrl = file.fileUrl || `./${previewFileName}`;
@@ -905,8 +919,8 @@
           fileUrl: previewFileUrl,
           fileMeta: `${fileExt} · ${file.fileSize || "未知大小"}`,
           summary: file.summary || "請主管確認內容是否足以讓新人接手。",
-          status: "pending",
-          note: ""
+          status: file.status || "pending",
+          note: file.note || ""
         };
       });
 
