@@ -25,14 +25,14 @@
 | 企劃地圖 | `shared/data/demo-project-map.json`（以 `npm run demo:project-map` 從三份 demo 文件產生） | 選擇資料夾 → 重新建立（需要 `OPENAI_API_KEY`），可按「示範結果」還原 |
 | 輔助對話 | `shared/data/demo-chat.json` 的一組問答 | 直接提問 |
 | 新人上手路線圖、風險知識 | D1 種子資料（`lib/onboarding/seed.ts`） | — |
-| 離職夥伴上傳 | 三份 demo 文件已對應最低可接手模式 6 項，並自動執行欄位檢查；經驗訪談已有 4 則回答 | 加入檔案、移除、清空檔案、Agent 快速欄位檢查 |
+| 離職夥伴上傳 | 三份 demo 文件各對應 B／P／A 一類（同類項目自動涵蓋），並自動執行欄位檢查；經驗訪談已有 4 則回答 | 加入檔案、移除、清空檔案、Agent 快速欄位檢查 |
 | 主管建立／審核／指派 | ORBIT 專案、7 項審核判斷、已指派周以晨（交接碼 `FM0501`） | 清空重填、修改審核判斷 |
 | RAG 管理 | 索引為空時自動載入 demo 文件並執行一次查詢 | 上傳 DOCX、同步本機知識庫 |
 
 示範文件放在 `public/demo/orbit/`。新人登入後輸入交接碼 `FM0501` 即可連結示範案件。
 
 - `/api/documents`：DOCX 與文字檔的文字擷取（PDF 尚未支援）
-- `/api/agent/review`：交接文件完備性檢查（`lib/handoff/review.ts` 的規則檢查，未接 LLM）
+- `/api/agent/review`：交接文件完備性檢查。`lib/handoff/review-engine.ts` 規則檢查，設定 `AGENT_LLM_*` 後再加上 LLM 檢查（`lib/handoff/llm-client.ts`）；LLM 失敗時退回規則結果。兩者移植自離職同事的 InsightShift 展示專案
 
 ## 目錄
 

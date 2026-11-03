@@ -1,50 +1,59 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { reviewHandoffFiles } from "../lib/handoff/review.ts";
+import { reviewHandoffDocuments } from "../lib/handoff/review-engine.ts";
 
-const checklist = [
-  { title: "B2 接手行動", text: "知道目前進度、接手後第一步、重要期限" },
-  { title: "A2 取得方式", text: "知道資源在哪裡,以及如何取得權限" },
-  { title: "P1 關鍵人物", text: "知道主要內外部窗口是誰、各自負責什麼" },
-];
+const businessText = "工作目的：追蹤進度並負責 UAT。目前進度：完成約 78%。下一步：完成 SSO 測試，期限 2026/10/06。";
+const peopleText = "窗口：陳柏維｜工程主管｜負責系統開發。什麼情況需要聯絡：核心功能異常時找誰處理。";
+const assetsText = "系統：ORBIT 工單系統｜文件存放位置：KB-ORBIT｜權限申請方式：由專案管理員加入。";
 
-test("passes items whose files cover every required fact", () => {
-  const result = reviewHandoffFiles({
-    checklist,
+test("one document per B/P/A category covers the fast-mode checklist", () => {
+  const review = reviewHandoffDocuments({
+    mode: "fast",
     files: [
-      {
-        fileName: "01.docx",
-        mappedItemTitle: "B2 接手行動",
-        extractedText: "目前進度：UAT 完成約 78%｜下一步：完成 SSO 安全修正｜預計日期：2026/10/06",
-      },
+      { fileName: "01.docx", mappedItemTitle: "B1 工作內容", extractedText: businessText, extractionStatus: "ok" },
+      { fileName: "02.docx", mappedItemTitle: "P1 關鍵人物", extractedText: peopleText, extractionStatus: "ok" },
+      { fileName: "03.docx", mappedItemTitle: "A1 必要資源", extractedText: assetsText, extractionStatus: "ok" },
+    ],
+  });
+
+  assert.equal(review.ok, true);
+  assert.equal(review.canSubmit, true);
+  assert.equal(review.itemResults.length, 6);
+  assert.ok(review.itemResults.every((item) => !item.blocking));
+  assert.match(review.summary, /可交由主管審核/);
+});
+
+test("blocks missing categories, unreadable files and plaintext credentials", () => {
+  const review = reviewHandoffDocuments({
+    mode: "fast",
+    files: [
+      { fileName: "scan.pdf", mappedItemTitle: "B1 工作內容", extractedText: "", extractionStatus: "unsupported" },
+      { fileName: "people.txt", mappedItemTitle: "P1 關鍵人物", extractedText: `${peopleText} 密碼：orbit2026`, extractionStatus: "ok" },
+    ],
+  });
+
+  const byItem = Object.fromEntries(review.itemResults.map((item) => [item.itemTitle, item]));
+  assert.equal(review.canSubmit, false);
+  assert.equal(byItem["B1 工作內容"].state, "unreadable");
+  assert.equal(byItem["P1 關鍵人物"].state, "high_risk");
+  assert.equal(byItem["A1 必要資源"].state, "missing");
+  assert.equal(review.status, "high_risk");
+});
+
+test("treats security policy statements as safe", () => {
+  const review = reviewHandoffDocuments({
+    mode: "fast",
+    files: [
       {
         fileName: "03.docx",
         mappedItemTitle: "A2 取得方式",
-        extractedText: "存放位置：KB-ORBIT/20_UAT｜所需權限／申請方式：Viewer；由資料團隊核准",
+        extractedText: `${assetsText} 本文件不保存任何明碼密碼、token 或 API key，請使用公司帳號與正式權限流程。`,
+        extractionStatus: "ok",
       },
     ],
   });
 
-  assert.deepEqual(result.checkedItems, ["B2 接手行動", "A2 取得方式"]);
-  assert.equal(result.issues.length, 0);
-  assert.match(result.summary, /可交給主管審核/);
-});
-
-test("flags missing facts, unreadable files and recorded passwords", () => {
-  const result = reviewHandoffFiles({
-    checklist,
-    files: [
-      { fileName: "notes.txt", mappedItemTitle: "B2 接手行動", extractedText: "這個專案很重要，請加油。" },
-      { fileName: "scan.pdf", mappedItemTitle: "A2 取得方式", extractedText: "", extractionStatus: "unsupported" },
-      { fileName: "people.txt", mappedItemTitle: "P1 關鍵人物", extractedText: "窗口：陳柏維 負責工程｜密碼：orbit2026" },
-    ],
-  });
-
-  const byItem = Object.fromEntries(result.issues.map((issue) => [issue.itemTitle, issue.message]));
-  assert.match(byItem["B2 接手行動"], /目前進度、下一步行動、重要期限/);
-  assert.match(byItem["A2 取得方式"], /無法讀取「scan\.pdf」/);
-  assert.match(byItem["P1 關鍵人物"], /明碼密碼/);
-  assert.ok(result.issues.every((issue) => issue.blocking));
-  assert.match(result.summary, /3 項需要修正/);
+  const a2 = review.itemResults.find((item) => item.itemTitle === "A2 取得方式");
+  assert.notEqual(a2.state, "high_risk");
 });

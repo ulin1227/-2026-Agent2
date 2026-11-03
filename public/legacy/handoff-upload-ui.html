@@ -1082,6 +1082,7 @@
     let agentWarnings = {};
     let checkedItemTitles = new Set();
     let lastAgentReviewSummary = "";
+    let agentCheckError = "";
     let experienceAnswers = {};
     let activeExperienceQuestionId = "";
 
@@ -1186,15 +1187,31 @@
       return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
     }
 
+    function categoryPrefix(title) {
+      return String(title || "").trim().slice(0, 1);
+    }
+
+    function isSameCategory(leftTitle, rightTitle) {
+      const leftPrefix = categoryPrefix(leftTitle);
+      const rightPrefix = categoryPrefix(rightTitle);
+      return leftPrefix === rightPrefix && ["B", "P", "A"].includes(leftPrefix);
+    }
+
     function matchedItem(item) {
-      return uploadedFiles.some((fileObj) => fileObj.mappedItemTitle === item.title);
+      return uploadedFiles.some((fileObj) => {
+        return fileObj.mappedItemTitle === item.title || isSameCategory(fileObj.mappedItemTitle, item.title);
+      });
     }
 
     function clearAgentReviewForTitle(title) {
       if (!title || title === "其他補充資料") return;
-      checkedItemTitles.delete(title);
-      delete agentWarnings[title];
+      modes[currentMode].items.forEach((item) => {
+        if (!isSameCategory(title, item.title)) return;
+        checkedItemTitles.delete(item.title);
+        delete agentWarnings[item.title];
+      });
       lastAgentReviewSummary = "";
+      agentCheckError = "";
     }
 
     function clearAllAgentReview() {
@@ -1202,6 +1219,7 @@
       agentWarnings = {};
       checkedItemTitles = new Set();
       lastAgentReviewSummary = "";
+      agentCheckError = "";
     }
 
     function markCurrentItemsChecked() {
@@ -1211,6 +1229,23 @@
           .map((item) => item.title)
       );
       isAgentChecked = true;
+    }
+
+    function applyAgentReview(review) {
+      const reviewedItems = Array.isArray(review.itemResults) ? review.itemResults : [];
+      const issues = Array.isArray(review.issues) ? review.issues : [];
+
+      isAgentChecked = true;
+      agentCheckError = "";
+      checkedItemTitles = new Set(reviewedItems.map((item) => item.itemTitle).filter(Boolean));
+      agentWarnings = {};
+
+      issues.forEach((issue) => {
+        if (!issue?.itemTitle || issue.level === "info") return;
+        agentWarnings[issue.itemTitle] = issue.message || "此項目需要補充或確認。";
+      });
+
+      lastAgentReviewSummary = review.summary || "Agent 快速欄位檢查已完成。";
     }
 
     function allMatchedItemsChecked() {
@@ -1531,6 +1566,13 @@
         submitReviewBtn.disabled = true;
         submitReviewBtn.style.cursor = "not-allowed";
       }
+      else if (agentCheckError) {
+        reviewStatus.textContent = "檢查失敗";
+        reviewStatus.className = "status-pill status-danger";
+        reviewSummary.textContent = agentCheckError;
+        submitReviewBtn.disabled = true;
+        submitReviewBtn.style.cursor = "not-allowed";
+      }
       else if (!allChecked) {
         reviewStatus.textContent = "待檢查";
         reviewStatus.className = "status-pill status-warning";
@@ -1689,38 +1731,30 @@
       addFiles(event.dataTransfer.files);
     });
 
-    async function runAgentReview({ silent = false } = {}) {
+    async function runAgentReview() {
       agentCheckBtn.disabled = true;
       agentCheckBtn.style.cursor = "not-allowed";
       agentCheckBtn.textContent = "檢查中...";
 
       try {
+        const payload = await buildAgentReviewPayload();
         const response = await fetch(`${getApiBase()}/api/agent/review`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(await buildAgentReviewPayload())
+          body: JSON.stringify(payload)
         });
+        const review = await response.json().catch(() => null);
 
-        if (!response.ok) {
-          const errorPayload = await response.json().catch(() => null);
-          throw new Error(errorPayload?.detail || errorPayload?.message || `Agent review failed: ${response.status}`);
+        if (!response.ok || !review?.ok) {
+          throw new Error(review?.message || "Agent 快速欄位檢查失敗。");
         }
 
-        const result = await response.json();
-        markCurrentItemsChecked();
-        lastAgentReviewSummary = result.summary || "";
-        agentWarnings = {};
-
-        (result.issues || [])
-          .filter((issue) => issue.blocking)
-          .forEach((issue) => {
-            agentWarnings[issue.itemTitle] = issue.message;
-          });
-
-        renderChecklist();
+        applyAgentReview(review);
       } catch (error) {
-        console.error(error);
-        if (!silent) alert(`Agent 檢查失敗：${error.message}\n\n請確認後端已啟動後再試一次。`);
+        isAgentChecked = false;
+        checkedItemTitles = new Set();
+        agentWarnings = {};
+        agentCheckError = `無法完成 Agent 檢查：${error.message || "請確認伺服器是否已啟動。"}`;
       } finally {
         agentCheckBtn.textContent = "Agent 快速欄位檢查";
         renderChecklist();
@@ -1736,16 +1770,14 @@
       renderPage();
     });
 
-    // Default demo state: the Project ORBIT handoff documents mapped to the fast-mode checklist,
-    // plus sample interview answers, so the page opens with results already in place.
+    // Default demo state: one Project ORBIT document per B/P/A category (each covers the
+    // other items of its category), plus sample interview answers, so the page opens
+    // with the Agent check already done.
     const demoDocumentBase = "/demo/orbit/";
     const demoMappings = [
       ["01_業務內容交接_Project_ORBIT.docx", "B1 工作內容"],
-      ["01_業務內容交接_Project_ORBIT.docx", "B2 接手行動"],
       ["02_人際關係交接_Project_ORBIT.docx", "P1 關鍵人物"],
-      ["02_人際關係交接_Project_ORBIT.docx", "P2 聯絡時機"],
-      ["03_公司資產交接_Project_ORBIT.docx", "A1 必要資源"],
-      ["03_公司資產交接_Project_ORBIT.docx", "A2 取得方式"]
+      ["03_公司資產交接_Project_ORBIT.docx", "A1 必要資源"]
     ];
     const demoExperienceAnswers = {
       "urgent-contact": "核心功能異常或發票資料可能錯配時，先找陳柏維（工程）和郭芷晴（資安），同時通知許雅婷，不要等到週二會議。",
@@ -1761,21 +1793,20 @@
       }
 
       try {
-        const names = [...new Set(demoMappings.map(([name]) => name))];
-        const files = new Map(await Promise.all(names.map(async (name) => {
+        const files = await Promise.all(demoMappings.map(async ([name]) => {
           const response = await fetch(`${demoDocumentBase}${encodeURIComponent(name)}`);
           if (!response.ok) throw new Error(`無法讀取示範文件 ${name}`);
           const blob = await response.blob();
-          return [name, new File([blob], name, { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" })];
-        })));
+          return new File([blob], name, { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+        }));
         if (uploadedFiles.length) return;
-        uploadedFiles = demoMappings.map(([name, title], index) => ({
+        uploadedFiles = demoMappings.map(([, title], index) => ({
           id: `demo-${index + 1}`,
-          file: files.get(name),
+          file: files[index],
           mappedItemTitle: title
         }));
         renderPage();
-        await runAgentReview({ silent: true });
+        await runAgentReview();
       } catch (error) {
         console.error(error);
       }

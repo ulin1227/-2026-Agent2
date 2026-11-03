@@ -152,8 +152,8 @@ test("runs the handoff field check through the agent review API", async () => {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        checklist: [{ title: "P2 聯絡時機", text: "知道什麼事情階段應該找誰" }],
-        files: [{ fileName: "draft.txt", mappedItemTitle: "P2 聯絡時機", extractedText: "有事再說。" }],
+        mode: "fast",
+        files: [{ fileName: "draft.txt", mappedItemTitle: "P2 聯絡時機", extractedText: "有事再說。", extractionStatus: "ok" }],
       }),
     }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
@@ -161,8 +161,19 @@ test("runs the handoff field check through the agent review API", async () => {
   );
   assert.equal(response.status, 200);
   const result = await response.json();
-  assert.equal(result.issues[0].itemTitle, "P2 聯絡時機");
-  assert.match(result.issues[0].message, /聯絡時機/);
+  const byItem = Object.fromEntries(result.itemResults.map((item) => [item.itemTitle, item.state]));
+  assert.equal(result.ok, true);
+  assert.equal(result.canSubmit, false);
+  assert.equal(result.agentProvider, "rules");
+  assert.equal(byItem["P1 關鍵人物"], "invalid_content");
+  assert.equal(byItem["B1 工作內容"], "missing");
+});
+
+test("publishes the handoff spec and legacy stylesheet the upload page links to", async () => {
+  const page = await readFile(new URL("../public/legacy/handoff-upload-ui.html", import.meta.url), "utf8");
+  for (const href of page.match(/(?<=href=")\.\/[^"]+(?=")/g)) {
+    await readFile(new URL(`../public/legacy/${href.slice(2)}`, import.meta.url));
+  }
 });
 
 const portals = {

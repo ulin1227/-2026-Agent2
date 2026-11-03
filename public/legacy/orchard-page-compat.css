@@ -1,0 +1,292 @@
+/*
+ * Compatibility layer for the handoff prototype pages.
+ * Keeps legacy page class names working without globals.css.
+ */
+
+:root {
+  --ink: var(--orchard-ink);
+  --muted: rgb(255 255 255 / 76%);
+  --line: rgb(255 255 255 / 22%);
+  --paper: var(--orchard-paper);
+  --canvas: var(--orchard-green);
+  --sage: var(--orchard-green);
+  --sage-dark: var(--orchard-green-dark);
+  --sage-soft: var(--orchard-green-soft);
+  --sand: var(--orchard-honey-soft);
+  --blue-soft: var(--orchard-info-soft);
+  --danger: var(--orchard-danger);
+  --danger-soft: var(--orchard-danger-soft);
+  --warning: #805509;
+  --warning-soft: var(--orchard-honey-soft);
+  --shadow: var(--orchard-shadow-md);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body.orchard-app {
+  margin: 0;
+  color: var(--orchard-white);
+  background:
+    radial-gradient(circle at 88% 16%, rgb(255 255 255 / 18%), transparent 23rem),
+    linear-gradient(145deg, #c9de71 0%, #b8d35b 36%, #98bd39 100%);
+}
+
+.project-create-shell,
+.handoff-upload-shell,
+.review-shell,
+.newcomer-shell {
+  min-height: 100vh;
+  color: var(--orchard-white);
+  background:
+    radial-gradient(circle at 88% 16%, rgb(255 255 255 / 18%), transparent 23rem),
+    radial-gradient(circle at 18% 0%, rgb(255 255 255 / 16%), transparent 18rem),
+    linear-gradient(145deg, #c9de71 0%, #b8d35b 36%, #98bd39 100%) !important;
+}
+
+.workspace {
+  min-width: 0;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.content-scroll {
+  overflow: auto;
+  padding: 25px 27px 38px;
+}
+
+.topbar {
+  min-height: 76px;
+  padding: 13px 27px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  z-index: 5;
+  color: var(--orchard-white);
+  border-bottom: 1px solid rgb(255 255 255 / 26%) !important;
+  background: rgb(160 194 61 / 28%) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(14px);
+}
+
+.topbar h1,
+.project-create-shell .topbar h1,
+.handoff-upload-shell .topbar h1,
+.review-shell .topbar h1,
+.newcomer-shell .topbar h1 {
+  margin: 5px 0 0;
+  color: var(--orchard-white);
+  font: 700 24px/1.2 var(--orchard-font-display);
+}
+
+.breadcrumb {
+  color: rgb(255 255 255 / 56%);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.breadcrumb i {
+  padding: 0 5px;
+  color: rgb(255 255 255 / 38%);
+  font-style: normal;
+}
+
+.topbar-note {
+  color: rgb(255 255 255 / 76%) !important;
+}
+
+.eyebrow {
+  color: rgb(75 96 25 / 72%);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.topbar .eyebrow,
+.topbar .score-pill {
+  color: var(--orchard-white);
+}
+
+.project-create-shell .topbar .score-pill {
+  color: var(--orchard-green-dark);
+}
+
+.review-shell .case-strip .project-heading {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.score-pill,
+.status-pill {
+  display: inline-flex;
+  min-height: 26px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid rgb(136 168 50 / 16%);
+  border-radius: var(--orchard-radius-pill);
+  color: var(--orchard-green-dark);
+  background: var(--orchard-green-soft);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.score-warn,
+.status-warning {
+  border-color: rgb(240 171 53 / 18%);
+  color: #805509;
+  background: var(--orchard-honey-soft);
+}
+
+.status-done {
+  border-color: rgb(136 168 50 / 20%);
+  color: var(--orchard-green-dark);
+  background: var(--orchard-green-soft);
+}
+
+.status-danger {
+  border-color: rgb(180 91 69 / 16%);
+  color: var(--orchard-danger);
+  background: var(--orchard-danger-soft);
+}
+
+.map-panel,
+.summary-card,
+.project-heading,
+.case-info,
+.setup-panel,
+.upload-panel,
+.review-panel,
+.assignment-panel,
+.project-strip,
+.case-strip {
+  border-color: rgb(255 255 255 / 42%) !important;
+  border-radius: var(--orchard-radius-md) !important;
+  background: rgb(255 253 242 / 94%) !important;
+  box-shadow: 0 18px 44px rgb(66 82 22 / 16%) !important;
+}
+
+.map-panel,
+.summary-card,
+.project-heading,
+.case-info,
+.setup-panel,
+.upload-panel,
+.review-panel,
+.assignment-panel,
+.project-strip,
+.case-strip,
+.mode-card,
+.role-card,
+.handoff-item,
+.review-item,
+.detail-panel,
+.file-preview,
+.check-note,
+.hint-box {
+  color: var(--orchard-ink);
+}
+
+.summary-card strong,
+.map-panel h2,
+.map-panel h3,
+.project-heading h2,
+.project-strip h2,
+.setup-panel-header h2,
+.upload-panel-header h2,
+.review-panel-header h2,
+.panel-header h2 {
+  color: var(--orchard-ink);
+  font-family: var(--orchard-font-display);
+  font-weight: 700;
+}
+
+.summary-card span,
+.map-panel p,
+.project-heading span,
+.project-strip p,
+.setup-panel-header p,
+.upload-panel-header p,
+.review-panel-header p,
+.panel-header p,
+.case-info span {
+  color: var(--orchard-ink-soft);
+}
+
+.primary-button,
+.ghost-button {
+  min-height: 40px;
+  border-radius: var(--orchard-radius-sm);
+  padding: 0 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform var(--orchard-transition),
+    background-color var(--orchard-transition),
+    border-color var(--orchard-transition),
+    box-shadow var(--orchard-transition);
+}
+
+.primary-button {
+  border-color: #e7a02e !important;
+  color: #4d3d17 !important;
+  background: linear-gradient(145deg, #ffc75b, #eea431) !important;
+  box-shadow: 0 9px 22px rgb(127 87 14 / 18%) !important;
+}
+
+.primary-button:hover {
+  background: #ffd170 !important;
+  transform: translateY(-1px);
+}
+
+.ghost-button {
+  border-color: var(--orchard-line-strong) !important;
+  color: var(--orchard-green-dark) !important;
+  background: rgb(255 253 242 / 88%) !important;
+}
+
+.ghost-button:hover {
+  background: #fff5c9 !important;
+  transform: translateY(-1px);
+}
+
+.primary-button:disabled,
+.ghost-button:disabled {
+  opacity: 0.58;
+  cursor: not-allowed !important;
+  transform: none;
+}
+
+input,
+select,
+textarea {
+  color: var(--orchard-ink);
+}
+
+@media (max-width: 680px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .content-scroll {
+    padding: 18px 14px 28px;
+  }
+}
