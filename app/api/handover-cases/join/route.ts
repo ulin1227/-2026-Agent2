@@ -3,6 +3,8 @@ import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { handoverCaseMembers, handoverCases } from "@/db/schema";
 import { destinationFor, jsonError, requireSessionUser } from "@/lib/auth";
+import { DEFAULT_CASE_ID } from "@/lib/onboarding/constants";
+import { ensureDemoCaseSeeded } from "@/lib/onboarding/seed";
 
 export async function POST(request: Request) {
   const user = await requireSessionUser(request);
@@ -13,6 +15,8 @@ export async function POST(request: Request) {
   if (!/^[A-Z0-9]{6}$/.test(code)) return jsonError("交接碼須為 6 碼英數字。", 400);
 
   const db = getDb();
+  // Make sure the demo case (code FM0501) exists even if no onboarding page was opened yet.
+  await ensureDemoCaseSeeded(db, DEFAULT_CASE_ID);
   const cases = await db
     .select({ id: handoverCases.id, title: handoverCases.title, status: handoverCases.status })
     .from(handoverCases)

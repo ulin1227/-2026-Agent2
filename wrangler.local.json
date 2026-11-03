@@ -1,0 +1,14 @@
+{
+  "$comment": "Only for applying drizzle migrations to the local Miniflare D1 used by `npm run dev` (npm run db:migrate:local). Mirrors vite.config.ts localBindingConfig.",
+  "name": "flowlink-local",
+  "main": "./worker/index.ts",
+  "compatibility_date": "2026-01-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "site-creator-d1",
+      "database_id": "00000000-0000-4000-8000-000000000000",
+      "migrations_dir": "./drizzle"
+    }
+  ]
+}
