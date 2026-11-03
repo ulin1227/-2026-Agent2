@@ -88,15 +88,15 @@ export function destinationFor(role: Role, caseId?: string | null) {
   switch (role) {
     case "newcomer":
       return {
-        label: "新人上手路線圖",
-        path: encodedCaseId ? `/onboarding/roadmap?caseId=${encodedCaseId}` : null,
+        label: "新人功能導向頁",
+        path: encodedCaseId ? `/onboarding?caseId=${encodedCaseId}` : null,
       };
     case "supervisor":
-      return { label: "交接管理總覽", path: null };
+      return { label: "交接管理總覽", path: "/supervisor/create" };
     case "colleague":
-      return { label: "資料上傳專區", path: null };
+      return { label: "資料上傳專區", path: "/handoff/upload" };
     default:
-      return { label: "離職同事引導", path: null };
+      return { label: "離職同事引導", path: "/handoff/upload" };
   }
 }
 
