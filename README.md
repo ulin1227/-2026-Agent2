@@ -32,7 +32,7 @@
 示範文件放在 `public/demo/orbit/`。新人登入後輸入交接碼 `FM0501` 即可連結示範案件。
 
 - `/api/documents`：DOCX 與文字檔的文字擷取（PDF 尚未支援）
-- `/api/agent/review`：交接文件完備性檢查。`lib/handoff/review-engine.ts` 規則檢查，設定 `OPENAI_API_KEY`／`OPENAI_BASE_URL`／`OPENAI_MODEL`（與企劃地圖共用，或另設 `AGENT_LLM_*`）後再加上 LLM 檢查（`lib/handoff/llm-client.ts`）；LLM 失敗時退回規則結果。兩者移植自離職同事的 InsightShift 展示專案
+- `/api/agent/review`：交接文件完備性檢查。`lib/handoff/review-engine.ts` 規則檢查，設定 `AGENT_LLM_*` 後再加上 LLM 檢查（`lib/handoff/llm-client.ts`）；LLM 失敗時退回規則結果。兩者移植自離職同事的 InsightShift 展示專案
 
 ## 目錄
 

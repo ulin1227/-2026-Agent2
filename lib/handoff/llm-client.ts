@@ -1,6 +1,6 @@
 // LLM pass of the handoff completeness check, ported from the InsightShift handoff demo
-// backend (backend/llm-client.mjs). Uses AGENT_LLM_* when set, otherwise the OPENAI_* settings
-// shared with the project map. OPENCLAW_* is left to the assist chat gateway (backend/services/agent.ts).
+// backend (backend/llm-client.mjs). Reads AGENT_LLM_* only: the OPENCLAW_* names are already
+// used by the assist chat gateway (backend/services/agent.ts).
 import type { ReviewInput, ReviewIssue, RuleReview } from "./review-engine";
 
 type LlmReview = {
@@ -29,9 +29,9 @@ const CHECKLIST_RUBRIC: Record<string, string> = {
 
 function getLlmConfig() {
   return {
-    apiKey: process.env.AGENT_LLM_API_KEY || process.env.OPENAI_API_KEY || "",
-    baseUrl: process.env.AGENT_LLM_BASE_URL || process.env.OPENAI_BASE_URL || "",
-    model: process.env.AGENT_LLM_MODEL || process.env.OPENAI_MODEL || "",
+    apiKey: process.env.AGENT_LLM_API_KEY || "",
+    baseUrl: process.env.AGENT_LLM_BASE_URL || "",
+    model: process.env.AGENT_LLM_MODEL || "",
     path: process.env.AGENT_LLM_CHAT_COMPLETIONS_PATH || "/chat/completions"
   };
 }
@@ -224,7 +224,7 @@ export async function reviewWithLlm(input: ReviewInput, ruleReview: RuleReview):
     return {
       ...ruleReview,
       agentProvider: "rules",
-      llmSkippedReason: "OPENAI_API_KEY、OPENAI_BASE_URL 或 OPENAI_MODEL 尚未設定。"
+      llmSkippedReason: "AGENT_LLM_API_KEY、AGENT_LLM_BASE_URL 或 AGENT_LLM_MODEL 尚未設定。"
     };
   }
 
