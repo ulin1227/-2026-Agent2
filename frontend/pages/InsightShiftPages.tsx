@@ -537,7 +537,6 @@ export function ProjectMapPage() {
             </section>
           )}
         </div>
-        <div className="analysis-note"><b>分類模式</b><span>只整理文件既有內容，不評分、不補寫缺漏。</span></div>
       </aside>
     </main>
   );
